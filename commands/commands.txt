@@ -1,0 +1,24 @@
+Jarvis make a note
+Jarvis remind me
+to
+at
+tomorrow
+yesterday
+morning
+night
+Jarvis record
+Jarvis stop
+Jarvis, status report
+Jarvis what's the weather going to be today?
+Jarvis what's the weather going to be tomorrow?
+Jarvis play pandora
+Jarvis play spotify
+Jarvis pause
+Jarvis continue
+Jarvis skip
+Jarvis increase volume
+Jarvis decrease volume
+Jarvis speed up
+Jarvis slow down
+Jarvis where am I?
+Jarvis tell me a joke
