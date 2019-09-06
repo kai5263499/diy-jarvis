@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+option go_package = "generated";
+
+service AudioProcessor {
+    rpc Subscribe(stream ProcessAudioRequest) returns (stream ProcessAudioResponse) {}
+}
+
+service EventResponder {
+    rpc Subscribe (stream ProcessResultEventRequest) returns (stream ProcessResultEventResponse) {}
+}
+
+service AudioOutput {
+    rpc Subscribe (stream AudioOutputRequest) returns (stream AudioOutputResponse) {}
+}
+
+message ProcessAudioRequest {
+    string requestId = 1;
+    string sourceId = 2;
+    uint64 audioStartTime = 3;
+    bytes audioData = 5;
+}
+
+message ProcessAudioResponse {
+    enum ProcessAudioResponseCode {
+        ERROR = 0;
+        ACCEPTED = 1;
+    }
+
+    string requestId = 1;
+    ProcessAudioResponseCode responseCode = 2;
+    uint64 audioStartTime = 3;
+    string Output = 4;
+}
+
+message ProcessResultEventRequest {
+
+}
+
+message ProcessResultEventResponse {
+
+}
+
+message AudioOutputRequest {
+    string sinkId = 1;
+    string requestId = 2;
+    string text = 3;
+}
+
+message AudioOutputResponse {
+    enum AudioOutputResponseCode {
+        ERROR = 0;
+        ACCEPTED = 1;
+    }
+
+    uint64 requestId = 1;
+    AudioOutputResponseCode responseCode = 2;
+}

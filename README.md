@@ -1,6 +1,6 @@
 # diy-jarvis
 
-This repo contains various scripts and notebooks I've come across for processing audio in general and speech in particular. The overall goal of all this is to create a simple yet flexible system for responding to audio events.
+This repo contains the services that make up a simple DIY voice assistant framework. The components of this framework 
 
 
 
