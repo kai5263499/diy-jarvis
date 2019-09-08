@@ -3,11 +3,9 @@ package deepspeech_audio_processor
 import (
 	"fmt"
 	"io"
-	"github.com/pkg/errors"
 	"github.com/mattetti/filebuffer"
 	"github.com/cryptix/wav"
 	ds "github.com/asticode/go-astideepspeech"
-	"github.com/asticode/go-astilog"
 	pb "github.com/kai5263499/diy-jarvis/generated"
 )
 
@@ -54,7 +52,7 @@ func (p *DeepSpeechAudioProcessor) Subscribe(stream pb.AudioProcessor_SubscribeS
 			if err == io.EOF {
 				break
 			} else if err != nil {
-				fmt.Printf("sample read error=%+#v", err))
+				fmt.Printf("sample read error=%+#v\n", err)
 			}
 			d = append(d, int16(s))
 		}

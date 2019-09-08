@@ -1,58 +1,54 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	"net"
 	"log"
-	"os"
+	"net"
 
 	"github.com/asticode/go-astideepspeech"
 
 	"google.golang.org/grpc"
 
-	dsap "github.com/kai5263499/diy-jarvis/service/audio_processor/deepspeech"
+	"github.com/caarlos0/env"
 	pb "github.com/kai5263499/diy-jarvis/generated"
+	dsap "github.com/kai5263499/diy-jarvis/service/audio_processor/deepspeech"
 )
 
-// Constants
-const (
-	beamWidth            = 500
-	nCep                 = 26
-	nContext             = 9
-	lmWeight             = 0.75
-	validWordCountWeight = 1.85
+type config struct {
+	Alphabet             string  `env:"ALPHABET" envDefault:"/deepspeech_models/alphabet.txt"`
+	LanguageModel        string  `env:"LM" envDefault:"/deepspeech_models/lm.binary"`
+	Model                string  `env:"MODEL" envDefault:"/deepspeech_models/output_graph.pbmm"`
+	Trie                 string  `env:"TRIE" envDefault:"/deepspeech_models/trie"`
+	ListenPort           int     `env:"LISTEN_PORT" envDefault:"6000"`
+	BeamWidth            int     `env:"BEAM_WIDTH" envDefault:"500"`
+	NCep                 int     `env:"NCEP" envDefault:"26"`
+	NContext             int     `env:"NCONTEXT" envDefault:"9"`
+	LMWeight             float64 `env:"LM_WEIGHT" envDefault:"0.75"`
+	ValidWordCountWeight float64 `env:"VALID_WORDCOUNT_WEIGHT" envDefault:"1.85"`
+}
+
+var (
+	cfg config
 )
 
-var model = flag.String("model", "", "Path to the model (protocol buffer binary file)")
-var alphabet = flag.String("alphabet", "", "Path to the configuration file specifying the alphabet used by the network")
-var lm = flag.String("lm", "", "Path to the language model binary file")
-var trie = flag.String("trie", "", "Path to the language model trie file created with native_client/generate_trie")
-var version = flag.Bool("version", false, "Print version and exits")
-var listenPort = flag.Int("port", 6000, "Port to listen for requests on")
+func checkError(err error) {
+	if err != nil {
+		panic(fmt.Sprintf("err=%#+v", err))
+	}
+}
 
 func main() {
-	flag.Parse()
-
-	if *version {
-		astideepspeech.PrintVersions()
-		return
-	}
-
-	if *model == "" || *alphabet == "" {
-		// In case of error print error and print usage
-		// This can also be done by passing -h or --help flags
-		fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s:\n", os.Args[0])
-		flag.PrintDefaults()
-		return
-	}
+	var err error
+	cfg = config{}
+	err = env.Parse(&cfg)
+	checkError(err)
 
 	fmt.Printf("Initialize DeepSpeech..")
 
-	m := astideepspeech.New(*model, nCep, nContext, *alphabet, beamWidth)
+	m := astideepspeech.New(cfg.Model, cfg.NCep, cfg.NContext, cfg.Alphabet, cfg.BeamWidth)
 	defer m.Close()
-	if *lm != "" {
-		m.EnableDecoderWithLM(*alphabet, *lm, *trie, lmWeight, validWordCountWeight)
+	if cfg.LanguageModel != "" {
+		m.EnableDecoderWithLM(cfg.Alphabet, cfg.LanguageModel, cfg.Trie, cfg.LMWeight, cfg.ValidWordCountWeight)
 	}
 
 	fmt.Printf("Done!\n")
@@ -61,11 +57,9 @@ func main() {
 	grpcServer := grpc.NewServer()
 	pb.RegisterAudioProcessorServer(grpcServer, ap)
 
-	l, err := net.Listen("tcp", fmt.Sprintf(":%d", *listenPort))
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
+	l, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.ListenPort))
+	checkError(err)
 
-	log.Printf("Listening on tcp://localhost:%d", *listenPort)
+	log.Printf("Listening on tcp://0.0.0.0:%d\n", cfg.ListenPort)
 	grpcServer.Serve(l)
 }
