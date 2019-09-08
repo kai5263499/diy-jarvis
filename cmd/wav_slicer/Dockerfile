@@ -15,6 +15,6 @@ ENV FILE=""
 ENV AUDIO_PROCESSOR_ADDRESS=""
 
 COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/wav_slicer/deps /
-COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/wav_slicer/wav_slicer /mic_capture
+COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/wav_slicer/wav_slicer /wav_slicer
 
 ENTRYPOINT [ "/wav_slicer" ]
