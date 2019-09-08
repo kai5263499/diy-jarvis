@@ -1,4 +1,5 @@
 FROM ubuntu:18.04
+
 LABEL MAINTAINER="Wes Widner <kai5263499@gmail.com>"
 
 ENV CGO_ENABLED=1 CGO_CPPFLAGS="-I/usr/include"
@@ -38,6 +39,8 @@ RUN apt-get update && \
 	go get github.com/nu7hatch/gouuid && \
 	go get golang.org/x/net/context && \
 	go get -u google.golang.org/grpc && \
+	go get gopkg.in/jdkato/prose.v2 && \
+	go get github.com/caarlos0/env && \
 	# Install protoc tools
 	go get -u github.com/golang/protobuf/protoc-gen-go && \
 	curl -sLO https://github.com/google/protobuf/releases/download/v3.7.1/protoc-3.7.1-linux-x86_64.zip && \
