@@ -8,7 +8,6 @@ exec-interactive:
 	-e PULSE_SERVER=docker.for.mac.localhost \
 	-v ~/.config/pulse:/home/pulseaudio/.config/pulse \
 	-v ~/code/deproot/src/github.com/kai5263499:/go/src/github.com/kai5263499 \
-	-v ~/code:/code \
 	kai5263499/diy-jarvis-builder bash
 
 # Generate go stubs from proto definitions. This should be run inside of an interactive container

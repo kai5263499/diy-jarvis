@@ -81,15 +81,12 @@ func processWavFile(stream pb.AudioProcessor_SubscribeClient, wavFile string, wg
 	defer wg.Done()
 	var err error
 
-	// Stat audio file
 	fileStat, err := os.Stat(wavFile)
 	checkError(err)
 
-	// Open audio
 	f, err := os.Open(wavFile)
 	checkError(err)
 
-	// Create reader
 	r, err := wav.NewReader(f, fileStat.Size())
 	checkError(err)
 	

@@ -30,11 +30,10 @@ func metadataToString(m *ds.Metadata) string {
 }
 
 func (p *DeepSpeechAudioProcessor) Subscribe(stream pb.AudioProcessor_SubscribeServer) error {
-	fmt.Printf("new subscription!\n")
 	for {
 		req, err := stream.Recv()
 		if err != nil {
-			fmt.Printf("error recv request %+#v\n", err)
+			fmt.Printf("recv error=%+#v\n", err)
 			break
 		}
 
@@ -46,22 +45,17 @@ func (p *DeepSpeechAudioProcessor) Subscribe(stream pb.AudioProcessor_SubscribeS
 
 		r, err := wav.NewReader(f, int64(len(req.AudioData)))
 		if err != nil {
-			astilog.Fatal(errors.Wrap(err, "creating new reader failed"))
 			continue
 		}
 
-		// Read
 		var d []int16
 		for {
-			// Read sample
 			s, err := r.ReadSample()
 			if err == io.EOF {
 				break
 			} else if err != nil {
-				astilog.Fatal(errors.Wrap(err, "reading sample failed"))
+				fmt.Printf("sample read error=%+#v", err))
 			}
-
-			// Append
 			d = append(d, int16(s))
 		}
 
@@ -72,7 +66,6 @@ func (p *DeepSpeechAudioProcessor) Subscribe(stream pb.AudioProcessor_SubscribeS
 			AudioStartTime: req.AudioStartTime,
 			ResponseCode: pb.ProcessAudioResponse_ACCEPTED,
 			Output: output,
-			
 		}
 
 		stream.Send(resp)

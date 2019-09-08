@@ -2,7 +2,9 @@
 
 This repo contains the services that make up a simple DIY voice assistant framework. The components of this framework 
 
+## diy-builder Image
 
+This image includes go, Mozilla's deepspeech native client and library, and various other speech synthesis libraries used in the diy-jarvis ecosystem.
 
 ## Containerized development
 
