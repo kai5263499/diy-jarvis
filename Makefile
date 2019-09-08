@@ -13,6 +13,7 @@ exec-interactive:
 	-v ~/.config/pulse:/home/pulseaudio/.config/pulse \
 	-v ~/Downloads/deepspeech-0.5.1-models:/deepspeech_models \
 	-v ~/code/deproot/src/github.com/kai5263499:/go/src/github.com/kai5263499 \
+	-w /go/src/github.com/kai5263499/diy-jarvis \
 	kai5263499/diy-jarvis-builder bash
 
 # Generate go stubs from proto definitions. This should be run inside of an interactive container
