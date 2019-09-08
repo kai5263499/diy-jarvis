@@ -1,47 +1,52 @@
 package main
 
 import (
-	"os"
-	"flag"
-	"unsafe"
-	"fmt"
-	"time"
 	"bytes"
+	"encoding/binary"
+	"fmt"
 	"io/ioutil"
+	"os"
 	"sync"
 	"sync/atomic"
-	"encoding/binary"
+	"time"
+	"unsafe"
 
+	"github.com/caarlos0/env"
+
+	"github.com/cryptix/wav"
+	pb "github.com/kai5263499/diy-jarvis/generated"
+	uuid "github.com/nu7hatch/gouuid"
+	"github.com/xlab/closer"
+	"github.com/xlab/portaudio-go/portaudio"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	pb "github.com/kai5263499/diy-jarvis/generated"
-	"github.com/cryptix/wav"
-	uuid "github.com/nu7hatch/gouuid"
-	"github.com/xlab/portaudio-go/portaudio"
-	"github.com/xlab/closer"
 )
 
 const (
-	sampleRate  = 16000
-	channels    = 1
-	sampleFormat= portaudio.PaInt16
+	sampleRate   = 16000
+	channels     = 1
+	sampleFormat = portaudio.PaInt16
 )
+
+type config struct {
+	Duration              uint   `env:"DURATION"`
+	AudioProcessorAddress string `env:"AUDIO_PROCESSOR_ADDRESS"`
+}
 
 var (
 	samplesPerChannel = uint(16000)
-	duration = flag.Int("duration",10, "Number of seconds of audio to collect before sending to processor")
-	audioProcessorAddress = flag.String("server", "localhost:6000", "Address of the audio processor to send samples to")
 
-	numRequests uint32
+	numRequests  uint32
 	numResponses uint32
-	stream pb.AudioProcessor_SubscribeClient
+	stream       pb.AudioProcessor_SubscribeClient
+	cfg          config
 )
 
 type processAudioDataRequest struct {
-	uuid *uuid.UUID
-	wavWriter *wav.Writer
+	uuid        *uuid.UUID
+	wavWriter   *wav.Writer
 	tmpFileName string
-	msg *pb.ProcessAudioRequest
+	msg         *pb.ProcessAudioRequest
 }
 
 func checkError(err error) {
@@ -74,15 +79,15 @@ func newProcessAudioRequest() *processAudioDataRequest {
 	writer, _ := meta.NewWriter(f)
 
 	msg := &pb.ProcessAudioRequest{
-		RequestId: newUUID.String(),
+		RequestId:      newUUID.String(),
 		AudioStartTime: uint64(time.Now().Unix()),
 	}
 
 	return &processAudioDataRequest{
-		uuid: newUUID,
-		wavWriter: writer,
+		uuid:        newUUID,
+		wavWriter:   writer,
 		tmpFileName: f.Name(),
-		msg: msg,
+		msg:         msg,
 	}
 }
 
@@ -117,7 +122,7 @@ func processMicInput(wg *sync.WaitGroup) {
 		paErr := portaudio.Terminate()
 		checkPAError(paErr)
 	})
-	
+
 	var paStream *portaudio.Stream
 	paErr = portaudio.OpenDefaultStream(&paStream, channels, 0, sampleFormat, sampleRate,
 		samplesPerChannel, paCallback, nil)
@@ -161,7 +166,7 @@ func paCallback(input unsafe.Pointer, _ unsafe.Pointer, sampleCount uint,
 	// if !ok {
 	// 	return statusAbort
 	// }
-	
+
 	return statusContinue
 }
 
@@ -176,10 +181,13 @@ func processResponses(wg *sync.WaitGroup) {
 }
 
 func main() {
-	flag.Parse()
 	var err error
-	
-	conn, err := grpc.Dial(*audioProcessorAddress, grpc.WithInsecure())
+
+	cfg = config{}
+	err = env.Parse(&cfg)
+	checkError(err)
+
+	conn, err := grpc.Dial(cfg.AudioProcessorAddress, grpc.WithInsecure())
 	checkError(err)
 	defer conn.Close()
 
@@ -188,7 +196,7 @@ func main() {
 	checkError(err)
 	defer stream.CloseSend()
 
-	samplesPerChannel = sampleRate * uint(*duration) 
+	samplesPerChannel = sampleRate * cfg.Duration
 
 	var wg sync.WaitGroup
 	wg.Add(2)
