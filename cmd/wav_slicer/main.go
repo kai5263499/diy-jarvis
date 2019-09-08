@@ -1,36 +1,39 @@
 package main
 
 import (
-	"flag"
-	"io"
-	"os"
 	"fmt"
-	"time"
+	"io"
 	"io/ioutil"
+	"os"
 	"sync"
 	"sync/atomic"
+	"time"
 
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
+	"github.com/caarlos0/env"
 	"github.com/cryptix/wav"
 	pb "github.com/kai5263499/diy-jarvis/generated"
 	uuid "github.com/nu7hatch/gouuid"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
-var (
-	audioFileToProcess = flag.String("in", "", "Path to the audio file to run (WAV format)")
-	audioProcessorAddress = flag.String("server", "localhost:6000", "Address of the audio processor to send samples to")
+type config struct {
+	AudioFileToProcess    string `env:"FILE"`
+	AudioProcessorAddress string `env:"AUDIO_PROCESSOR_ADDRESS"`
+}
 
-	numRequests uint32
+var (
+	numRequests  uint32
 	numResponses uint32
 	wavFilesRead uint32
+	cfg          config
 )
 
 type processAudioDataRequest struct {
-	uuid *uuid.UUID
-	wavWriter *wav.Writer
+	uuid        *uuid.UUID
+	wavWriter   *wav.Writer
 	tmpFileName string
-	msg *pb.ProcessAudioRequest
+	msg         *pb.ProcessAudioRequest
 }
 
 func checkError(err error) {
@@ -48,15 +51,15 @@ func newProcessAudioRequest(meta *wav.File) *processAudioDataRequest {
 	writer, _ := meta.NewWriter(f)
 
 	msg := &pb.ProcessAudioRequest{
-		RequestId: newUUID.String(),
+		RequestId:      newUUID.String(),
 		AudioStartTime: uint64(time.Now().Unix()),
 	}
 
 	return &processAudioDataRequest{
-		uuid: newUUID,
-		wavWriter: writer,
+		uuid:        newUUID,
+		wavWriter:   writer,
 		tmpFileName: f.Name(),
-		msg: msg,
+		msg:         msg,
 	}
 }
 
@@ -89,7 +92,7 @@ func processWavFile(stream pb.AudioProcessor_SubscribeClient, wavFile string, wg
 
 	r, err := wav.NewReader(f, fileStat.Size())
 	checkError(err)
-	
+
 	samplesPerChunk := r.GetSampleRate() * uint32(10)
 
 	meta := wav.File{
@@ -97,7 +100,7 @@ func processWavFile(stream pb.AudioProcessor_SubscribeClient, wavFile string, wg
 		SampleRate:      r.GetSampleRate(),
 		SignificantBits: r.GetBitsPerSample(),
 	}
-	
+
 	req := newProcessAudioRequest(&meta)
 
 	sampleCnt := uint32(0)
@@ -123,7 +126,7 @@ func processWavFile(stream pb.AudioProcessor_SubscribeClient, wavFile string, wg
 			req = newProcessAudioRequest(&meta)
 		}
 	}
-	
+
 	atomic.AddUint32(&wavFilesRead, 1)
 
 	processChunk(stream, req)
@@ -138,7 +141,7 @@ func processResponses(stream pb.AudioProcessor_SubscribeClient, wg *sync.WaitGro
 		checkError(err)
 
 		fmt.Printf("%s\n", resp.Output)
-		
+
 		atomic.AddUint32(&numResponses, 1)
 
 		if atomic.LoadUint32(&wavFilesRead) > 0 && (atomic.LoadUint32(&numRequests) == atomic.LoadUint32(&numResponses)) {
@@ -148,9 +151,11 @@ func processResponses(stream pb.AudioProcessor_SubscribeClient, wg *sync.WaitGro
 }
 
 func main() {
-	flag.Parse()
+	cfg = config{}
+	err := env.Parse(&cfg)
+	checkError(err)
 
-	conn, err := grpc.Dial(*audioProcessorAddress, grpc.WithInsecure())
+	conn, err := grpc.Dial(cfg.AudioProcessorAddress, grpc.WithInsecure())
 	checkError(err)
 	defer conn.Close()
 
@@ -161,7 +166,7 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(2)
-	go processWavFile(stream, *audioFileToProcess, &wg)
+	go processWavFile(stream, cfg.AudioFileToProcess, &wg)
 	go processResponses(stream, &wg)
 	wg.Wait()
 }
