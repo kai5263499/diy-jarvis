@@ -36,6 +36,8 @@ RUN apt-get update && \
 	go get github.com/xlab/closer && \
 	go get github.com/zenwerk/go-wave && \
 	go get github.com/nu7hatch/gouuid && \
+	go get golang.org/x/net/context && \
+	go get -u google.golang.org/grpc && \
 	# Install protoc tools
 	go get -u github.com/golang/protobuf/protoc-gen-go && \
 	curl -sLO https://github.com/google/protobuf/releases/download/v3.7.1/protoc-3.7.1-linux-x86_64.zip && \
