@@ -4,7 +4,7 @@ COPY / /go/src/github.com/kai5263499/diy-jarvis
 
 RUN cd /go/src/github.com/kai5263499/diy-jarvis/cmd/deepspeech && \
     go build && \
-    ldd mic_capture | tr -s '[:blank:]' '\n' | grep '^/' | \
+    ldd deepspeech | tr -s '[:blank:]' '\n' | grep '^/' | \
     xargs -I % sh -c 'mkdir -p $(dirname deps%); cp % deps%;'
 
 FROM scratch
@@ -28,5 +28,7 @@ COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/deepspeech/deep
 RUN wget https://github.com/mozilla/DeepSpeech/releases/download/v0.5.1/deepspeech-0.5.1-models.tar.gz && \
     tar zxf deepspeech-0.5.1-models.tar.gz -C /deepspeech_models && \
     rm -rf deepspeech-0.5.1-models.tar.gz
+
+EXPOSE 6000
 
 ENTRYPOINT [ "/deepspeech" ]
