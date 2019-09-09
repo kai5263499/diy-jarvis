@@ -7,6 +7,10 @@ RUN cd /go/src/github.com/kai5263499/diy-jarvis/cmd/deepspeech && \
     ldd deepspeech | tr -s '[:blank:]' '\n' | grep '^/' | \
     xargs -I % sh -c 'mkdir -p $(dirname deps%); cp % deps%;'
 
+RUN wget https://github.com/mozilla/DeepSpeech/releases/download/v0.5.1/deepspeech-0.5.1-models.tar.gz && \
+    tar zxf deepspeech-0.5.1-models.tar.gz -C /deepspeech_models && \
+    rm -rf deepspeech-0.5.1-models.tar.gz
+
 FROM scratch
 
 LABEL MAINTAINER="Wes Widner <kai5263499@gmail.com>"
@@ -24,10 +28,7 @@ ENV VALID_WORDCOUNT_WEIGHT="1.85"
 
 COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/deepspeech/deps /
 COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/deepspeech/deepspeech /deepspeech
-
-RUN wget https://github.com/mozilla/DeepSpeech/releases/download/v0.5.1/deepspeech-0.5.1-models.tar.gz && \
-    tar zxf deepspeech-0.5.1-models.tar.gz -C /deepspeech_models && \
-    rm -rf deepspeech-0.5.1-models.tar.gz
+COPY --from=builder /deepspeech_models /deepspeech_models
 
 EXPOSE 6000
 
