@@ -4,7 +4,7 @@ COPY / /go/src/github.com/kai5263499/diy-jarvis
 
 RUN cd /go/src/github.com/kai5263499/diy-jarvis/cmd/wav_slicer && \
     go build && \
-    ldd mic_capture | tr -s '[:blank:]' '\n' | grep '^/' | \
+    ldd wav_slicer | tr -s '[:blank:]' '\n' | grep '^/' | \
     xargs -I % sh -c 'mkdir -p $(dirname deps%); cp % deps%;'
 
 FROM scratch
