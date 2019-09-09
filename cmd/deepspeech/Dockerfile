@@ -7,7 +7,8 @@ RUN cd /go/src/github.com/kai5263499/diy-jarvis/cmd/deepspeech && \
     ldd deepspeech | tr -s '[:blank:]' '\n' | grep '^/' | \
     xargs -I % sh -c 'mkdir -p $(dirname deps%); cp % deps%;'
 
-RUN wget https://github.com/mozilla/DeepSpeech/releases/download/v0.5.1/deepspeech-0.5.1-models.tar.gz && \
+RUN mkdir -p /deepspeech_models && \
+    wget https://github.com/mozilla/DeepSpeech/releases/download/v0.5.1/deepspeech-0.5.1-models.tar.gz && \
     tar zxf deepspeech-0.5.1-models.tar.gz -C /deepspeech_models && \
     rm -rf deepspeech-0.5.1-models.tar.gz
 
