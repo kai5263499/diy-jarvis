@@ -1,4 +1,4 @@
-FROM kai5263499/diy-jarvis-builder
+FROM kai5263499/diy-jarvis-builder as builder
 
 COPY / /go/src/github.com/kai5263499/diy-jarvis
 
