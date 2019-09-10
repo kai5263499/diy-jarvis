@@ -1,4 +1,4 @@
-FROM kai5263499/diy-jarvis-deepspeech-model as models
+FROM kai5263499/diy-jarvis-deepspeech-models as models
 FROM kai5263499/diy-jarvis-builder as builder
 
 COPY / /go/src/github.com/kai5263499/diy-jarvis
