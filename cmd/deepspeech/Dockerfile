@@ -1,3 +1,4 @@
+FROM kai5263499/diy-jarvis-deepspeech-model as models
 FROM kai5263499/diy-jarvis-builder as builder
 
 COPY / /go/src/github.com/kai5263499/diy-jarvis
@@ -7,13 +8,11 @@ RUN cd /go/src/github.com/kai5263499/diy-jarvis/cmd/deepspeech && \
     ldd deepspeech | tr -s '[:blank:]' '\n' | grep '^/' | \
     xargs -I % sh -c 'mkdir -p $(dirname deps%); cp % deps%;'
 
-RUN mkdir -p /deepspeech_models && \
-    wget https://github.com/mozilla/DeepSpeech/releases/download/v0.5.1/deepspeech-0.5.1-models.tar.gz && \
-    tar zxf deepspeech-0.5.1-models.tar.gz -C / && \
-    mv /deepspeech-0.5.1-models /deepspeech_models && \
-    rm -rf deepspeech-0.5.1-models.tar.gz
+RUN cd /go/src/github.com/kai5263499/diy-jarvis/cmd/deepspeech && \
+    mv deps/deepspeech/libdeepspeech.so deps/lib/libdeepspeech.so && \
+    rm -rf deps/deepspeech
 
-FROM scratch
+FROM ubuntu:18.04
 
 LABEL MAINTAINER="Wes Widner <kai5263499@gmail.com>"
 
@@ -29,9 +28,9 @@ ENV LM_WEIGHT="0.75"
 ENV VALID_WORDCOUNT_WEIGHT="1.85"
 
 COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/deepspeech/deps /
-COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/deepspeech/deepspeech /deepspeech-service
-COPY --from=builder /deepspeech_models /deepspeech_models
+COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/deepspeech/deepspeech /deepspeech
+COPY --from=models /deepspeech_models /deepspeech_models
 
 EXPOSE 6000
 
-ENTRYPOINT [ "/deepspeech-service" ]
+ENTRYPOINT [ "/deepspeech" ]
