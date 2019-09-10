@@ -9,7 +9,8 @@ RUN cd /go/src/github.com/kai5263499/diy-jarvis/cmd/deepspeech && \
 
 RUN mkdir -p /deepspeech_models && \
     wget https://github.com/mozilla/DeepSpeech/releases/download/v0.5.1/deepspeech-0.5.1-models.tar.gz && \
-    tar zxf deepspeech-0.5.1-models.tar.gz -C /deepspeech_models && \
+    tar zxf deepspeech-0.5.1-models.tar.gz -C / && \
+    mv /deepspeech-0.5.1-models /deepspeech_models && \
     rm -rf deepspeech-0.5.1-models.tar.gz
 
 FROM scratch
@@ -28,9 +29,9 @@ ENV LM_WEIGHT="0.75"
 ENV VALID_WORDCOUNT_WEIGHT="1.85"
 
 COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/deepspeech/deps /
-COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/deepspeech/deepspeech /deepspeech
+COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/deepspeech/deepspeech /deepspeech-service
 COPY --from=builder /deepspeech_models /deepspeech_models
 
 EXPOSE 6000
 
-ENTRYPOINT [ "/deepspeech" ]
+ENTRYPOINT [ "/deepspeech-service" ]
