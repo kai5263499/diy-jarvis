@@ -22,7 +22,7 @@ deepspeech-service:
 	docker run -p 6000:6000 -it --rm kai5263499/diy-jarvis-deepspeech
 
 mic_capture:
-	#docker pull kai5263499/diy-jarvis-mic-capture
+	docker pull kai5263499/diy-jarvis-mic-capture
 	docker run -it --rm \
 	-e AUDIO_PROCESSOR_ADDRESS="${AUDIO_PROCESSOR_ADDRESS}" \
 	-e PULSE_SERVER=docker.for.mac.localhost \
