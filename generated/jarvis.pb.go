@@ -49,36 +49,61 @@ func (ProcessAudioResponse_ProcessAudioResponseCode) EnumDescriptor() ([]byte, [
 	return fileDescriptor_f83d9eab90a0cfa3, []int{1, 0}
 }
 
-type AudioOutputResponse_AudioOutputResponseCode int32
+type TextEventResponse_ProcessAudioResponseCode int32
 
 const (
-	AudioOutputResponse_ERROR    AudioOutputResponse_AudioOutputResponseCode = 0
-	AudioOutputResponse_ACCEPTED AudioOutputResponse_AudioOutputResponseCode = 1
+	TextEventResponse_ERROR    TextEventResponse_ProcessAudioResponseCode = 0
+	TextEventResponse_ACCEPTED TextEventResponse_ProcessAudioResponseCode = 1
 )
 
-var AudioOutputResponse_AudioOutputResponseCode_name = map[int32]string{
+var TextEventResponse_ProcessAudioResponseCode_name = map[int32]string{
 	0: "ERROR",
 	1: "ACCEPTED",
 }
 
-var AudioOutputResponse_AudioOutputResponseCode_value = map[string]int32{
+var TextEventResponse_ProcessAudioResponseCode_value = map[string]int32{
 	"ERROR":    0,
 	"ACCEPTED": 1,
 }
 
-func (x AudioOutputResponse_AudioOutputResponseCode) String() string {
-	return proto.EnumName(AudioOutputResponse_AudioOutputResponseCode_name, int32(x))
+func (x TextEventResponse_ProcessAudioResponseCode) String() string {
+	return proto.EnumName(TextEventResponse_ProcessAudioResponseCode_name, int32(x))
 }
 
-func (AudioOutputResponse_AudioOutputResponseCode) EnumDescriptor() ([]byte, []int) {
+func (TextEventResponse_ProcessAudioResponseCode) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_f83d9eab90a0cfa3, []int{3, 0}
+}
+
+type OutputResponse_AudioOutputResponseCode int32
+
+const (
+	OutputResponse_ERROR    OutputResponse_AudioOutputResponseCode = 0
+	OutputResponse_ACCEPTED OutputResponse_AudioOutputResponseCode = 1
+)
+
+var OutputResponse_AudioOutputResponseCode_name = map[int32]string{
+	0: "ERROR",
+	1: "ACCEPTED",
+}
+
+var OutputResponse_AudioOutputResponseCode_value = map[string]int32{
+	"ERROR":    0,
+	"ACCEPTED": 1,
+}
+
+func (x OutputResponse_AudioOutputResponseCode) String() string {
+	return proto.EnumName(OutputResponse_AudioOutputResponseCode_name, int32(x))
+}
+
+func (OutputResponse_AudioOutputResponseCode) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_f83d9eab90a0cfa3, []int{5, 0}
 }
 
 type ProcessAudioRequest struct {
-	RequestId            string   `protobuf:"bytes,1,opt,name=requestId,proto3" json:"requestId,omitempty"`
-	SourceId             string   `protobuf:"bytes,2,opt,name=sourceId,proto3" json:"sourceId,omitempty"`
-	AudioStartTime       uint64   `protobuf:"varint,3,opt,name=audioStartTime,proto3" json:"audioStartTime,omitempty"`
-	AudioData            []byte   `protobuf:"bytes,5,opt,name=audioData,proto3" json:"audioData,omitempty"`
+	RequestId            string   `protobuf:"bytes,1,opt,name=RequestId,proto3" json:"RequestId,omitempty"`
+	SourceId             string   `protobuf:"bytes,2,opt,name=SourceId,proto3" json:"SourceId,omitempty"`
+	AudioStartTime       uint64   `protobuf:"varint,3,opt,name=AudioStartTime,proto3" json:"AudioStartTime,omitempty"`
+	AudioData            []byte   `protobuf:"bytes,5,opt,name=AudioData,proto3" json:"AudioData,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -139,8 +164,8 @@ func (m *ProcessAudioRequest) GetAudioData() []byte {
 
 type ProcessAudioResponse struct {
 	RequestId            string                                        `protobuf:"bytes,1,opt,name=requestId,proto3" json:"requestId,omitempty"`
-	ResponseCode         ProcessAudioResponse_ProcessAudioResponseCode `protobuf:"varint,2,opt,name=responseCode,proto3,enum=ProcessAudioResponse_ProcessAudioResponseCode" json:"responseCode,omitempty"`
-	AudioStartTime       uint64                                        `protobuf:"varint,3,opt,name=audioStartTime,proto3" json:"audioStartTime,omitempty"`
+	ResponseCode         ProcessAudioResponse_ProcessAudioResponseCode `protobuf:"varint,2,opt,name=ResponseCode,proto3,enum=ProcessAudioResponse_ProcessAudioResponseCode" json:"ResponseCode,omitempty"`
+	AudioStartTime       uint64                                        `protobuf:"varint,3,opt,name=AudioStartTime,proto3" json:"AudioStartTime,omitempty"`
 	Output               string                                        `protobuf:"bytes,4,opt,name=Output,proto3" json:"Output,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                                      `json:"-"`
 	XXX_unrecognized     []byte                                        `json:"-"`
@@ -200,212 +225,280 @@ func (m *ProcessAudioResponse) GetOutput() string {
 	return ""
 }
 
-type ProcessResultEventRequest struct {
+type TextEventRequest struct {
+	RequestId            string   `protobuf:"bytes,1,opt,name=RequestId,proto3" json:"RequestId,omitempty"`
+	SourceId             string   `protobuf:"bytes,2,opt,name=SourceId,proto3" json:"SourceId,omitempty"`
+	Text                 string   `protobuf:"bytes,4,opt,name=Text,proto3" json:"Text,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *ProcessResultEventRequest) Reset()         { *m = ProcessResultEventRequest{} }
-func (m *ProcessResultEventRequest) String() string { return proto.CompactTextString(m) }
-func (*ProcessResultEventRequest) ProtoMessage()    {}
-func (*ProcessResultEventRequest) Descriptor() ([]byte, []int) {
+func (m *TextEventRequest) Reset()         { *m = TextEventRequest{} }
+func (m *TextEventRequest) String() string { return proto.CompactTextString(m) }
+func (*TextEventRequest) ProtoMessage()    {}
+func (*TextEventRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f83d9eab90a0cfa3, []int{2}
 }
 
-func (m *ProcessResultEventRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ProcessResultEventRequest.Unmarshal(m, b)
+func (m *TextEventRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_TextEventRequest.Unmarshal(m, b)
 }
-func (m *ProcessResultEventRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ProcessResultEventRequest.Marshal(b, m, deterministic)
+func (m *TextEventRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_TextEventRequest.Marshal(b, m, deterministic)
 }
-func (m *ProcessResultEventRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ProcessResultEventRequest.Merge(m, src)
+func (m *TextEventRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TextEventRequest.Merge(m, src)
 }
-func (m *ProcessResultEventRequest) XXX_Size() int {
-	return xxx_messageInfo_ProcessResultEventRequest.Size(m)
+func (m *TextEventRequest) XXX_Size() int {
+	return xxx_messageInfo_TextEventRequest.Size(m)
 }
-func (m *ProcessResultEventRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_ProcessResultEventRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ProcessResultEventRequest proto.InternalMessageInfo
-
-type ProcessResultEventResponse struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+func (m *TextEventRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_TextEventRequest.DiscardUnknown(m)
 }
 
-func (m *ProcessResultEventResponse) Reset()         { *m = ProcessResultEventResponse{} }
-func (m *ProcessResultEventResponse) String() string { return proto.CompactTextString(m) }
-func (*ProcessResultEventResponse) ProtoMessage()    {}
-func (*ProcessResultEventResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f83d9eab90a0cfa3, []int{3}
-}
+var xxx_messageInfo_TextEventRequest proto.InternalMessageInfo
 
-func (m *ProcessResultEventResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ProcessResultEventResponse.Unmarshal(m, b)
-}
-func (m *ProcessResultEventResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ProcessResultEventResponse.Marshal(b, m, deterministic)
-}
-func (m *ProcessResultEventResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ProcessResultEventResponse.Merge(m, src)
-}
-func (m *ProcessResultEventResponse) XXX_Size() int {
-	return xxx_messageInfo_ProcessResultEventResponse.Size(m)
-}
-func (m *ProcessResultEventResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_ProcessResultEventResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ProcessResultEventResponse proto.InternalMessageInfo
-
-type AudioOutputRequest struct {
-	SinkId               string   `protobuf:"bytes,1,opt,name=sinkId,proto3" json:"sinkId,omitempty"`
-	RequestId            string   `protobuf:"bytes,2,opt,name=requestId,proto3" json:"requestId,omitempty"`
-	Text                 string   `protobuf:"bytes,3,opt,name=text,proto3" json:"text,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *AudioOutputRequest) Reset()         { *m = AudioOutputRequest{} }
-func (m *AudioOutputRequest) String() string { return proto.CompactTextString(m) }
-func (*AudioOutputRequest) ProtoMessage()    {}
-func (*AudioOutputRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f83d9eab90a0cfa3, []int{4}
-}
-
-func (m *AudioOutputRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_AudioOutputRequest.Unmarshal(m, b)
-}
-func (m *AudioOutputRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_AudioOutputRequest.Marshal(b, m, deterministic)
-}
-func (m *AudioOutputRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AudioOutputRequest.Merge(m, src)
-}
-func (m *AudioOutputRequest) XXX_Size() int {
-	return xxx_messageInfo_AudioOutputRequest.Size(m)
-}
-func (m *AudioOutputRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_AudioOutputRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_AudioOutputRequest proto.InternalMessageInfo
-
-func (m *AudioOutputRequest) GetSinkId() string {
-	if m != nil {
-		return m.SinkId
-	}
-	return ""
-}
-
-func (m *AudioOutputRequest) GetRequestId() string {
+func (m *TextEventRequest) GetRequestId() string {
 	if m != nil {
 		return m.RequestId
 	}
 	return ""
 }
 
-func (m *AudioOutputRequest) GetText() string {
+func (m *TextEventRequest) GetSourceId() string {
+	if m != nil {
+		return m.SourceId
+	}
+	return ""
+}
+
+func (m *TextEventRequest) GetText() string {
 	if m != nil {
 		return m.Text
 	}
 	return ""
 }
 
-type AudioOutputResponse struct {
-	RequestId            uint64                                      `protobuf:"varint,1,opt,name=requestId,proto3" json:"requestId,omitempty"`
-	ResponseCode         AudioOutputResponse_AudioOutputResponseCode `protobuf:"varint,2,opt,name=responseCode,proto3,enum=AudioOutputResponse_AudioOutputResponseCode" json:"responseCode,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                                    `json:"-"`
-	XXX_unrecognized     []byte                                      `json:"-"`
-	XXX_sizecache        int32                                       `json:"-"`
+type TextEventResponse struct {
+	RequestId            string                                     `protobuf:"bytes,1,opt,name=RequestId,proto3" json:"RequestId,omitempty"`
+	SourceId             string                                     `protobuf:"bytes,2,opt,name=SourceId,proto3" json:"SourceId,omitempty"`
+	ResponseCode         TextEventResponse_ProcessAudioResponseCode `protobuf:"varint,3,opt,name=responseCode,proto3,enum=TextEventResponse_ProcessAudioResponseCode" json:"responseCode,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                                   `json:"-"`
+	XXX_unrecognized     []byte                                     `json:"-"`
+	XXX_sizecache        int32                                      `json:"-"`
 }
 
-func (m *AudioOutputResponse) Reset()         { *m = AudioOutputResponse{} }
-func (m *AudioOutputResponse) String() string { return proto.CompactTextString(m) }
-func (*AudioOutputResponse) ProtoMessage()    {}
-func (*AudioOutputResponse) Descriptor() ([]byte, []int) {
+func (m *TextEventResponse) Reset()         { *m = TextEventResponse{} }
+func (m *TextEventResponse) String() string { return proto.CompactTextString(m) }
+func (*TextEventResponse) ProtoMessage()    {}
+func (*TextEventResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f83d9eab90a0cfa3, []int{3}
+}
+
+func (m *TextEventResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_TextEventResponse.Unmarshal(m, b)
+}
+func (m *TextEventResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_TextEventResponse.Marshal(b, m, deterministic)
+}
+func (m *TextEventResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TextEventResponse.Merge(m, src)
+}
+func (m *TextEventResponse) XXX_Size() int {
+	return xxx_messageInfo_TextEventResponse.Size(m)
+}
+func (m *TextEventResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_TextEventResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TextEventResponse proto.InternalMessageInfo
+
+func (m *TextEventResponse) GetRequestId() string {
+	if m != nil {
+		return m.RequestId
+	}
+	return ""
+}
+
+func (m *TextEventResponse) GetSourceId() string {
+	if m != nil {
+		return m.SourceId
+	}
+	return ""
+}
+
+func (m *TextEventResponse) GetResponseCode() TextEventResponse_ProcessAudioResponseCode {
+	if m != nil {
+		return m.ResponseCode
+	}
+	return TextEventResponse_ERROR
+}
+
+type OutputRequest struct {
+	SinkId               string   `protobuf:"bytes,1,opt,name=SinkId,proto3" json:"SinkId,omitempty"`
+	RequestId            string   `protobuf:"bytes,2,opt,name=RequestId,proto3" json:"RequestId,omitempty"`
+	Text                 string   `protobuf:"bytes,3,opt,name=Text,proto3" json:"Text,omitempty"`
+	MediaURL             string   `protobuf:"bytes,4,opt,name=MediaURL,proto3" json:"MediaURL,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *OutputRequest) Reset()         { *m = OutputRequest{} }
+func (m *OutputRequest) String() string { return proto.CompactTextString(m) }
+func (*OutputRequest) ProtoMessage()    {}
+func (*OutputRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f83d9eab90a0cfa3, []int{4}
+}
+
+func (m *OutputRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_OutputRequest.Unmarshal(m, b)
+}
+func (m *OutputRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_OutputRequest.Marshal(b, m, deterministic)
+}
+func (m *OutputRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OutputRequest.Merge(m, src)
+}
+func (m *OutputRequest) XXX_Size() int {
+	return xxx_messageInfo_OutputRequest.Size(m)
+}
+func (m *OutputRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_OutputRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OutputRequest proto.InternalMessageInfo
+
+func (m *OutputRequest) GetSinkId() string {
+	if m != nil {
+		return m.SinkId
+	}
+	return ""
+}
+
+func (m *OutputRequest) GetRequestId() string {
+	if m != nil {
+		return m.RequestId
+	}
+	return ""
+}
+
+func (m *OutputRequest) GetText() string {
+	if m != nil {
+		return m.Text
+	}
+	return ""
+}
+
+func (m *OutputRequest) GetMediaURL() string {
+	if m != nil {
+		return m.MediaURL
+	}
+	return ""
+}
+
+type OutputResponse struct {
+	RequestId            uint64                                 `protobuf:"varint,1,opt,name=RequestId,proto3" json:"RequestId,omitempty"`
+	SinkId               string                                 `protobuf:"bytes,2,opt,name=SinkId,proto3" json:"SinkId,omitempty"`
+	ResponseCode         OutputResponse_AudioOutputResponseCode `protobuf:"varint,3,opt,name=ResponseCode,proto3,enum=OutputResponse_AudioOutputResponseCode" json:"ResponseCode,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                               `json:"-"`
+	XXX_unrecognized     []byte                                 `json:"-"`
+	XXX_sizecache        int32                                  `json:"-"`
+}
+
+func (m *OutputResponse) Reset()         { *m = OutputResponse{} }
+func (m *OutputResponse) String() string { return proto.CompactTextString(m) }
+func (*OutputResponse) ProtoMessage()    {}
+func (*OutputResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_f83d9eab90a0cfa3, []int{5}
 }
 
-func (m *AudioOutputResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_AudioOutputResponse.Unmarshal(m, b)
+func (m *OutputResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_OutputResponse.Unmarshal(m, b)
 }
-func (m *AudioOutputResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_AudioOutputResponse.Marshal(b, m, deterministic)
+func (m *OutputResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_OutputResponse.Marshal(b, m, deterministic)
 }
-func (m *AudioOutputResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_AudioOutputResponse.Merge(m, src)
+func (m *OutputResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OutputResponse.Merge(m, src)
 }
-func (m *AudioOutputResponse) XXX_Size() int {
-	return xxx_messageInfo_AudioOutputResponse.Size(m)
+func (m *OutputResponse) XXX_Size() int {
+	return xxx_messageInfo_OutputResponse.Size(m)
 }
-func (m *AudioOutputResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_AudioOutputResponse.DiscardUnknown(m)
+func (m *OutputResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_OutputResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_AudioOutputResponse proto.InternalMessageInfo
+var xxx_messageInfo_OutputResponse proto.InternalMessageInfo
 
-func (m *AudioOutputResponse) GetRequestId() uint64 {
+func (m *OutputResponse) GetRequestId() uint64 {
 	if m != nil {
 		return m.RequestId
 	}
 	return 0
 }
 
-func (m *AudioOutputResponse) GetResponseCode() AudioOutputResponse_AudioOutputResponseCode {
+func (m *OutputResponse) GetSinkId() string {
+	if m != nil {
+		return m.SinkId
+	}
+	return ""
+}
+
+func (m *OutputResponse) GetResponseCode() OutputResponse_AudioOutputResponseCode {
 	if m != nil {
 		return m.ResponseCode
 	}
-	return AudioOutputResponse_ERROR
+	return OutputResponse_ERROR
 }
 
 func init() {
 	proto.RegisterEnum("ProcessAudioResponse_ProcessAudioResponseCode", ProcessAudioResponse_ProcessAudioResponseCode_name, ProcessAudioResponse_ProcessAudioResponseCode_value)
-	proto.RegisterEnum("AudioOutputResponse_AudioOutputResponseCode", AudioOutputResponse_AudioOutputResponseCode_name, AudioOutputResponse_AudioOutputResponseCode_value)
+	proto.RegisterEnum("TextEventResponse_ProcessAudioResponseCode", TextEventResponse_ProcessAudioResponseCode_name, TextEventResponse_ProcessAudioResponseCode_value)
+	proto.RegisterEnum("OutputResponse_AudioOutputResponseCode", OutputResponse_AudioOutputResponseCode_name, OutputResponse_AudioOutputResponseCode_value)
 	proto.RegisterType((*ProcessAudioRequest)(nil), "ProcessAudioRequest")
 	proto.RegisterType((*ProcessAudioResponse)(nil), "ProcessAudioResponse")
-	proto.RegisterType((*ProcessResultEventRequest)(nil), "ProcessResultEventRequest")
-	proto.RegisterType((*ProcessResultEventResponse)(nil), "ProcessResultEventResponse")
-	proto.RegisterType((*AudioOutputRequest)(nil), "AudioOutputRequest")
-	proto.RegisterType((*AudioOutputResponse)(nil), "AudioOutputResponse")
+	proto.RegisterType((*TextEventRequest)(nil), "TextEventRequest")
+	proto.RegisterType((*TextEventResponse)(nil), "TextEventResponse")
+	proto.RegisterType((*OutputRequest)(nil), "OutputRequest")
+	proto.RegisterType((*OutputResponse)(nil), "OutputResponse")
 }
 
 func init() { proto.RegisterFile("jarvis.proto", fileDescriptor_f83d9eab90a0cfa3) }
 
 var fileDescriptor_f83d9eab90a0cfa3 = []byte{
-	// 419 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x53, 0x4d, 0x8f, 0xd3, 0x30,
-	0x10, 0x5d, 0x2f, 0xd9, 0x6a, 0x33, 0x1b, 0x45, 0x2b, 0xb7, 0x2c, 0x21, 0xbb, 0x87, 0xca, 0x07,
-	0x94, 0x03, 0xb2, 0x50, 0xf6, 0x8a, 0x90, 0x96, 0x36, 0x87, 0xc2, 0xa1, 0x91, 0xdb, 0x13, 0x42,
-	0x48, 0x69, 0x63, 0xa1, 0xf0, 0x11, 0x17, 0xdb, 0xa9, 0xf8, 0x23, 0xfc, 0x18, 0x7e, 0x1c, 0x12,
-	0xaa, 0x13, 0xda, 0xa4, 0x75, 0x80, 0x5b, 0xe6, 0xd9, 0xf3, 0xde, 0xcc, 0x7b, 0x31, 0x78, 0x9f,
-	0x32, 0xb9, 0x2d, 0x14, 0xdd, 0x48, 0xa1, 0x05, 0xf9, 0x81, 0x60, 0x98, 0x4a, 0xb1, 0xe6, 0x4a,
-	0x3d, 0x54, 0x79, 0x21, 0x18, 0xff, 0x56, 0x71, 0xa5, 0xf1, 0x1d, 0xb8, 0xb2, 0xfe, 0x9c, 0xe5,
-	0x01, 0x1a, 0xa3, 0xc8, 0x65, 0x07, 0x00, 0x87, 0x70, 0xa9, 0x44, 0x25, 0xd7, 0x7c, 0x96, 0x07,
-	0xe7, 0xe6, 0x70, 0x5f, 0xe3, 0x67, 0xe0, 0x67, 0x3b, 0xa6, 0x85, 0xce, 0xa4, 0x5e, 0x16, 0x5f,
-	0x79, 0xf0, 0x68, 0x8c, 0x22, 0x87, 0x1d, 0xa1, 0x3b, 0x05, 0x83, 0x4c, 0x33, 0x9d, 0x05, 0x17,
-	0x63, 0x14, 0x79, 0xec, 0x00, 0x90, 0x5f, 0x08, 0x46, 0xdd, 0xb9, 0xd4, 0x46, 0x94, 0x8a, 0xff,
-	0x63, 0x30, 0x06, 0x9e, 0x6c, 0x6e, 0x4e, 0x44, 0xce, 0xcd, 0x70, 0x7e, 0x4c, 0xa9, 0x8d, 0xca,
-	0x0a, 0xee, 0xba, 0x58, 0x87, 0xe3, 0xbf, 0x17, 0xba, 0x81, 0xc1, 0xbc, 0xd2, 0x9b, 0x4a, 0x07,
-	0x8e, 0x19, 0xab, 0xa9, 0xc8, 0x3d, 0x04, 0x7d, 0x4a, 0xd8, 0x85, 0x8b, 0x84, 0xb1, 0x39, 0xbb,
-	0x3e, 0xc3, 0x1e, 0x5c, 0x3e, 0x4c, 0x26, 0x49, 0xba, 0x4c, 0xa6, 0xd7, 0x88, 0xdc, 0xc2, 0xd3,
-	0xa6, 0x89, 0x71, 0x55, 0x7d, 0xd1, 0xc9, 0x96, 0x97, 0xba, 0x09, 0x87, 0xdc, 0x41, 0x68, 0x3b,
-	0xac, 0x79, 0xc9, 0x07, 0xc0, 0x46, 0xa8, 0x96, 0xff, 0x13, 0xe8, 0x0d, 0x0c, 0x54, 0x51, 0x7e,
-	0xde, 0x9b, 0xd6, 0x54, 0x5d, 0x3f, 0xcf, 0x8f, 0xfd, 0xc4, 0xe0, 0x68, 0xfe, 0x5d, 0x9b, 0x8d,
-	0x5d, 0x66, 0xbe, 0xc9, 0x4f, 0x04, 0xc3, 0x8e, 0x40, 0x5f, 0x32, 0x4e, 0x9b, 0x29, 0xb5, 0x26,
-	0xf3, 0x9c, 0x5a, 0x98, 0x6c, 0xd8, 0x69, 0x2e, 0x24, 0x86, 0x27, 0x3d, 0x17, 0x7b, 0x6d, 0x8d,
-	0x53, 0xf0, 0x4d, 0x4f, 0x63, 0x9f, 0x90, 0xf8, 0x15, 0xb8, 0x8b, 0x6a, 0xa5, 0xd6, 0xb2, 0x58,
-	0x71, 0x3c, 0xa2, 0x96, 0xb7, 0x10, 0x3e, 0xb6, 0xfe, 0x29, 0xe4, 0x2c, 0x42, 0x2f, 0x50, 0xfc,
-	0x1e, 0xfc, 0x96, 0xfd, 0x39, 0x97, 0xf8, 0x4d, 0x9b, 0x31, 0xa4, 0xbd, 0x31, 0x86, 0xb7, 0xf4,
-	0x2f, 0x29, 0xd6, 0xec, 0x6f, 0xe1, 0xaa, 0xb5, 0x23, 0x7e, 0xd9, 0xa6, 0x1e, 0xd2, 0xd3, 0x98,
-	0xc3, 0x91, 0xcd, 0xbc, 0x9a, 0xec, 0xf5, 0xd5, 0x3b, 0xf7, 0x23, 0x2f, 0xb9, 0xcc, 0x34, 0xcf,
-	0x57, 0x03, 0xf3, 0xfe, 0xef, 0x7f, 0x07, 0x00, 0x00, 0xff, 0xff, 0xf5, 0xdd, 0x24, 0x19, 0x0f,
-	0x04, 0x00, 0x00,
+	// 466 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x94, 0xcf, 0x8e, 0xd3, 0x30,
+	0x10, 0xc6, 0xd7, 0x6d, 0xb7, 0xda, 0xcc, 0x86, 0xd0, 0x35, 0xcb, 0x12, 0x55, 0x1c, 0x2a, 0x1f,
+	0xa0, 0x12, 0x92, 0x85, 0xb2, 0x17, 0x4e, 0x48, 0xa5, 0xdb, 0xc3, 0xf2, 0x47, 0xad, 0xdc, 0x72,
+	0xe1, 0x44, 0xda, 0x58, 0x28, 0x20, 0xea, 0xe2, 0x38, 0x2b, 0x5e, 0x84, 0x67, 0xe2, 0x01, 0x78,
+	0x1e, 0x24, 0x14, 0xd7, 0x49, 0x9c, 0x34, 0x41, 0xa8, 0xdc, 0x32, 0x13, 0xfb, 0x9b, 0x6f, 0x7e,
+	0x33, 0x32, 0xb8, 0x9f, 0x43, 0x79, 0x17, 0x27, 0x74, 0x27, 0x85, 0x12, 0xe4, 0x07, 0x82, 0x07,
+	0x0b, 0x29, 0x36, 0x3c, 0x49, 0x26, 0x69, 0x14, 0x0b, 0xc6, 0xbf, 0xa5, 0x3c, 0x51, 0xf8, 0x31,
+	0x38, 0xe6, 0xf3, 0x36, 0xf2, 0xd1, 0x08, 0x8d, 0x1d, 0x56, 0x26, 0xf0, 0x10, 0xce, 0x96, 0x22,
+	0x95, 0x1b, 0x7e, 0x1b, 0xf9, 0x1d, 0xfd, 0xb3, 0x88, 0xf1, 0x13, 0xf0, 0xb4, 0xd2, 0x52, 0x85,
+	0x52, 0xad, 0xe2, 0xaf, 0xdc, 0xef, 0x8e, 0xd0, 0xb8, 0xc7, 0x6a, 0xd9, 0xac, 0x82, 0xce, 0xdc,
+	0x84, 0x2a, 0xf4, 0x4f, 0x47, 0x68, 0xec, 0xb2, 0x32, 0x41, 0x7e, 0x23, 0xb8, 0xac, 0xfa, 0x4a,
+	0x76, 0x62, 0x9b, 0xe8, 0x6b, 0xb2, 0x6e, 0xac, 0x48, 0x60, 0x06, 0x6e, 0x7e, 0x72, 0x2a, 0x22,
+	0xae, 0xcd, 0x79, 0x01, 0xa5, 0x4d, 0x52, 0x8d, 0xc9, 0xec, 0x16, 0xab, 0x68, 0xfc, 0x73, 0x43,
+	0x57, 0xd0, 0x9f, 0xa7, 0x6a, 0x97, 0x2a, 0xbf, 0xa7, 0x6d, 0x99, 0x88, 0x5c, 0x83, 0xdf, 0x56,
+	0x09, 0x3b, 0x70, 0x3a, 0x63, 0x6c, 0xce, 0x06, 0x27, 0xd8, 0x85, 0xb3, 0xc9, 0x74, 0x3a, 0x5b,
+	0xac, 0x66, 0x37, 0x03, 0x44, 0x3e, 0xc2, 0x60, 0xc5, 0xbf, 0xab, 0xd9, 0x1d, 0xdf, 0xaa, 0xff,
+	0x9f, 0x09, 0x86, 0x5e, 0xa6, 0x66, 0x8c, 0xe9, 0x6f, 0xf2, 0x0b, 0xc1, 0x85, 0x55, 0xa2, 0xc4,
+	0x7b, 0x64, 0x8d, 0x39, 0xb8, 0xd2, 0x46, 0xdf, 0xd5, 0xe8, 0x9f, 0xd1, 0x83, 0x1a, 0x7f, 0xe1,
+	0x6e, 0x0b, 0x1c, 0xc7, 0x2d, 0x85, 0x7b, 0x7b, 0xec, 0x39, 0xb4, 0x2b, 0xe8, 0x2f, 0xe3, 0xed,
+	0x97, 0xa2, 0x1b, 0x13, 0x55, 0x1b, 0xed, 0xd4, 0x1b, 0xcd, 0x81, 0x75, 0x4b, 0x60, 0x59, 0xf3,
+	0xef, 0x78, 0x14, 0x87, 0xef, 0xd9, 0x5b, 0x03, 0xb2, 0x88, 0xc9, 0x4f, 0x04, 0x5e, 0x5e, 0xb7,
+	0x8d, 0x64, 0xcf, 0x2e, 0x50, 0xda, 0xea, 0x54, 0x6c, 0xbd, 0xa9, 0x2d, 0xf0, 0x9e, 0xe2, 0x53,
+	0x5a, 0x15, 0xa7, 0x9a, 0x48, 0x35, 0x77, 0xb8, 0xb9, 0x24, 0x80, 0x47, 0x2d, 0x07, 0x5b, 0x01,
+	0x06, 0x0b, 0xb3, 0xed, 0x06, 0xbd, 0x90, 0xf8, 0x25, 0x38, 0xcb, 0x74, 0x9d, 0x6c, 0x64, 0xbc,
+	0xe6, 0xf8, 0x92, 0x36, 0xbc, 0x16, 0xc3, 0x87, 0x8d, 0x33, 0x25, 0x27, 0x63, 0xf4, 0x1c, 0x05,
+	0xaf, 0xc1, 0xb3, 0xe6, 0x1f, 0x71, 0x89, 0x5f, 0xd8, 0x8a, 0x17, 0xb4, 0xbe, 0xe8, 0x43, 0x7c,
+	0xb8, 0x34, 0x46, 0x6b, 0x02, 0xe7, 0x56, 0x47, 0x38, 0xb0, 0x85, 0x3c, 0x5a, 0x99, 0xfc, 0xf0,
+	0x7e, 0x0d, 0xda, 0x5e, 0xe2, 0xd5, 0xf9, 0x07, 0xe7, 0x13, 0xdf, 0x72, 0x19, 0x2a, 0x1e, 0xad,
+	0xfb, 0xfa, 0x15, 0xbc, 0xfe, 0x13, 0x00, 0x00, 0xff, 0xff, 0x46, 0x4e, 0xb0, 0x73, 0x15, 0x05,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -545,8 +638,8 @@ func (c *eventResponderClient) Subscribe(ctx context.Context, opts ...grpc.CallO
 }
 
 type EventResponder_SubscribeClient interface {
-	Send(*ProcessResultEventRequest) error
-	Recv() (*ProcessResultEventResponse, error)
+	Send(*TextEventRequest) error
+	Recv() (*TextEventResponse, error)
 	grpc.ClientStream
 }
 
@@ -554,12 +647,12 @@ type eventResponderSubscribeClient struct {
 	grpc.ClientStream
 }
 
-func (x *eventResponderSubscribeClient) Send(m *ProcessResultEventRequest) error {
+func (x *eventResponderSubscribeClient) Send(m *TextEventRequest) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *eventResponderSubscribeClient) Recv() (*ProcessResultEventResponse, error) {
-	m := new(ProcessResultEventResponse)
+func (x *eventResponderSubscribeClient) Recv() (*TextEventResponse, error) {
+	m := new(TextEventResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -588,8 +681,8 @@ func _EventResponder_Subscribe_Handler(srv interface{}, stream grpc.ServerStream
 }
 
 type EventResponder_SubscribeServer interface {
-	Send(*ProcessResultEventResponse) error
-	Recv() (*ProcessResultEventRequest, error)
+	Send(*TextEventResponse) error
+	Recv() (*TextEventRequest, error)
 	grpc.ServerStream
 }
 
@@ -597,12 +690,12 @@ type eventResponderSubscribeServer struct {
 	grpc.ServerStream
 }
 
-func (x *eventResponderSubscribeServer) Send(m *ProcessResultEventResponse) error {
+func (x *eventResponderSubscribeServer) Send(m *TextEventResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *eventResponderSubscribeServer) Recv() (*ProcessResultEventRequest, error) {
-	m := new(ProcessResultEventRequest)
+func (x *eventResponderSubscribeServer) Recv() (*TextEventRequest, error) {
+	m := new(TextEventRequest)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -649,8 +742,8 @@ func (c *audioOutputClient) Subscribe(ctx context.Context, opts ...grpc.CallOpti
 }
 
 type AudioOutput_SubscribeClient interface {
-	Send(*AudioOutputRequest) error
-	Recv() (*AudioOutputResponse, error)
+	Send(*OutputRequest) error
+	Recv() (*OutputResponse, error)
 	grpc.ClientStream
 }
 
@@ -658,12 +751,12 @@ type audioOutputSubscribeClient struct {
 	grpc.ClientStream
 }
 
-func (x *audioOutputSubscribeClient) Send(m *AudioOutputRequest) error {
+func (x *audioOutputSubscribeClient) Send(m *OutputRequest) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *audioOutputSubscribeClient) Recv() (*AudioOutputResponse, error) {
-	m := new(AudioOutputResponse)
+func (x *audioOutputSubscribeClient) Recv() (*OutputResponse, error) {
+	m := new(OutputResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -692,8 +785,8 @@ func _AudioOutput_Subscribe_Handler(srv interface{}, stream grpc.ServerStream) e
 }
 
 type AudioOutput_SubscribeServer interface {
-	Send(*AudioOutputResponse) error
-	Recv() (*AudioOutputRequest, error)
+	Send(*OutputResponse) error
+	Recv() (*OutputRequest, error)
 	grpc.ServerStream
 }
 
@@ -701,12 +794,12 @@ type audioOutputSubscribeServer struct {
 	grpc.ServerStream
 }
 
-func (x *audioOutputSubscribeServer) Send(m *AudioOutputResponse) error {
+func (x *audioOutputSubscribeServer) Send(m *OutputResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *audioOutputSubscribeServer) Recv() (*AudioOutputRequest, error) {
-	m := new(AudioOutputRequest)
+func (x *audioOutputSubscribeServer) Recv() (*OutputRequest, error) {
+	m := new(OutputRequest)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
 	}

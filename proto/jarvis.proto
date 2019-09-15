@@ -7,18 +7,18 @@ service AudioProcessor {
 }
 
 service EventResponder {
-    rpc Subscribe (stream ProcessResultEventRequest) returns (stream ProcessResultEventResponse) {}
+    rpc Subscribe (stream TextEventRequest) returns (stream TextEventResponse) {}
 }
 
 service AudioOutput {
-    rpc Subscribe (stream AudioOutputRequest) returns (stream AudioOutputResponse) {}
+    rpc Subscribe (stream OutputRequest) returns (stream OutputResponse) {}
 }
 
 message ProcessAudioRequest {
-    string requestId = 1;
-    string sourceId = 2;
-    uint64 audioStartTime = 3;
-    bytes audioData = 5;
+    string RequestId = 1;
+    string SourceId = 2;
+    uint64 AudioStartTime = 3;
+    bytes AudioData = 5;
 }
 
 message ProcessAudioResponse {
@@ -28,31 +28,42 @@ message ProcessAudioResponse {
     }
 
     string requestId = 1;
-    ProcessAudioResponseCode responseCode = 2;
-    uint64 audioStartTime = 3;
+    ProcessAudioResponseCode ResponseCode = 2;
+    uint64 AudioStartTime = 3;
     string Output = 4;
 }
 
-message ProcessResultEventRequest {
-
+message TextEventRequest {
+    string RequestId = 1;
+    string SourceId = 2;
+    string Text = 4;
 }
 
-message ProcessResultEventResponse {
+message TextEventResponse {
+    string RequestId = 1;
+    string SourceId = 2;
 
+    enum ProcessAudioResponseCode {
+        ERROR = 0;
+        ACCEPTED = 1;
+    }
+    ProcessAudioResponseCode responseCode = 3;
 }
 
-message AudioOutputRequest {
-    string sinkId = 1;
-    string requestId = 2;
-    string text = 3;
+message OutputRequest {
+    string SinkId = 1;
+    string RequestId = 2;
+    string Text = 3;
+    string MediaURL = 4;
 }
 
-message AudioOutputResponse {
+message OutputResponse {
     enum AudioOutputResponseCode {
         ERROR = 0;
         ACCEPTED = 1;
     }
 
-    uint64 requestId = 1;
-    AudioOutputResponseCode responseCode = 2;
+    uint64 RequestId = 1;
+    string SinkId = 2;
+    AudioOutputResponseCode ResponseCode = 3;
 }
