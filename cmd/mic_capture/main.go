@@ -14,6 +14,7 @@ import (
 	"github.com/caarlos0/env"
 
 	"github.com/cryptix/wav"
+	"github.com/kai5263499/diy-jarvis/domain"
 	pb "github.com/kai5263499/diy-jarvis/generated"
 	uuid "github.com/nu7hatch/gouuid"
 	"github.com/xlab/closer"
@@ -49,12 +50,6 @@ type processAudioDataRequest struct {
 	msg         *pb.ProcessAudioRequest
 }
 
-func checkError(err error) {
-	if err != nil {
-		panic(fmt.Sprintf("err=%#+v", err))
-	}
-}
-
 func checkPAError(err portaudio.Error) {
 	if portaudio.ErrorCode(err) != portaudio.PaNoError {
 		panic(fmt.Sprintf("err=%s", paErrorText(err)))
@@ -69,7 +64,7 @@ func newProcessAudioRequest() *processAudioDataRequest {
 	newUUID, _ := uuid.NewV4()
 
 	f, err := ioutil.TempFile("", newUUID.String())
-	checkError(err)
+	domain.CheckError(err)
 
 	meta := wav.File{
 		Channels:        channels,
@@ -95,16 +90,16 @@ func processChunk(req *processAudioDataRequest) {
 	var err error
 
 	err = req.wavWriter.Close()
-	checkError(err)
+	domain.CheckError(err)
 
 	content, err := ioutil.ReadFile(req.tmpFileName)
-	checkError(err)
+	domain.CheckError(err)
 
 	req.msg.AudioData = content
 
 	err = stream.Send(req.msg)
 	atomic.AddUint32(&numRequests, 1)
-	checkError(err)
+	domain.CheckError(err)
 
 	os.Remove(req.tmpFileName)
 }
@@ -174,7 +169,7 @@ func processResponses(wg *sync.WaitGroup) {
 	defer wg.Done()
 	for {
 		resp, err := stream.Recv()
-		checkError(err)
+		domain.CheckError(err)
 
 		fmt.Printf("%s\n", resp.Output)
 	}
@@ -185,15 +180,15 @@ func main() {
 
 	cfg = config{}
 	err = env.Parse(&cfg)
-	checkError(err)
+	domain.CheckError(err)
 
 	conn, err := grpc.Dial(cfg.AudioProcessorAddress, grpc.WithInsecure())
-	checkError(err)
+	domain.CheckError(err)
 	defer conn.Close()
 
 	client := pb.NewAudioProcessorClient(conn)
 	stream, err = client.Subscribe(context.Background())
-	checkError(err)
+	domain.CheckError(err)
 	defer stream.CloseSend()
 
 	samplesPerChannel = sampleRate * cfg.Duration

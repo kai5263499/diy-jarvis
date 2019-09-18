@@ -11,6 +11,7 @@ import (
 
 	"github.com/caarlos0/env"
 	"github.com/cryptix/wav"
+	"github.com/kai5263499/diy-jarvis/domain"
 	pb "github.com/kai5263499/diy-jarvis/generated"
 	uuid "github.com/nu7hatch/gouuid"
 	"golang.org/x/net/context"
@@ -36,17 +37,11 @@ type processAudioDataRequest struct {
 	msg         *pb.ProcessAudioRequest
 }
 
-func checkError(err error) {
-	if err != nil {
-		panic(fmt.Sprintf("err=%#+v", err))
-	}
-}
-
 func newProcessAudioRequest(meta *wav.File) *processAudioDataRequest {
 	newUUID, _ := uuid.NewV4()
 
 	f, err := ioutil.TempFile("", newUUID.String())
-	checkError(err)
+	domain.CheckError(err)
 
 	writer, _ := meta.NewWriter(f)
 
@@ -66,16 +61,16 @@ func newProcessAudioRequest(meta *wav.File) *processAudioDataRequest {
 func processChunk(stream pb.AudioProcessor_SubscribeClient, req *processAudioDataRequest) {
 	var err error
 	err = req.wavWriter.Close()
-	checkError(err)
+	domain.CheckError(err)
 
 	content, err := ioutil.ReadFile(req.tmpFileName)
-	checkError(err)
+	domain.CheckError(err)
 
 	req.msg.AudioData = content
 
 	err = stream.Send(req.msg)
 	atomic.AddUint32(&numRequests, 1)
-	checkError(err)
+	domain.CheckError(err)
 
 	os.Remove(req.tmpFileName)
 }
@@ -85,13 +80,13 @@ func processWavFile(stream pb.AudioProcessor_SubscribeClient, wavFile string, wg
 	var err error
 
 	fileStat, err := os.Stat(wavFile)
-	checkError(err)
+	domain.CheckError(err)
 
 	f, err := os.Open(wavFile)
-	checkError(err)
+	domain.CheckError(err)
 
 	r, err := wav.NewReader(f, fileStat.Size())
-	checkError(err)
+	domain.CheckError(err)
 
 	samplesPerChunk := r.GetSampleRate() * uint32(10)
 
@@ -112,7 +107,7 @@ func processWavFile(stream pb.AudioProcessor_SubscribeClient, wavFile string, wg
 		if err == io.EOF {
 			break
 		} else if err != nil {
-			checkError(err)
+			domain.CheckError(err)
 		}
 
 		sampleCnt++
@@ -138,7 +133,7 @@ func processResponses(stream pb.AudioProcessor_SubscribeClient, wg *sync.WaitGro
 	defer wg.Done()
 	for {
 		resp, err := stream.Recv()
-		checkError(err)
+		domain.CheckError(err)
 
 		fmt.Printf("%s\n", resp.Output)
 
@@ -153,15 +148,15 @@ func processResponses(stream pb.AudioProcessor_SubscribeClient, wg *sync.WaitGro
 func main() {
 	cfg = config{}
 	err := env.Parse(&cfg)
-	checkError(err)
+	domain.CheckError(err)
 
 	conn, err := grpc.Dial(cfg.AudioProcessorAddress, grpc.WithInsecure())
-	checkError(err)
+	domain.CheckError(err)
 	defer conn.Close()
 
 	client := pb.NewAudioProcessorClient(conn)
 	stream, err := client.Subscribe(context.Background())
-	checkError(err)
+	domain.CheckError(err)
 	defer stream.CloseSend()
 
 	var wg sync.WaitGroup

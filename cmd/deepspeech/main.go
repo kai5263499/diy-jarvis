@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/caarlos0/env"
+	"github.com/kai5263499/diy-jarvis/domain"
 	pb "github.com/kai5263499/diy-jarvis/generated"
 	dsap "github.com/kai5263499/diy-jarvis/service/audio_processor/deepspeech"
 )
@@ -31,17 +32,11 @@ var (
 	cfg config
 )
 
-func checkError(err error) {
-	if err != nil {
-		panic(fmt.Sprintf("err=%#+v", err))
-	}
-}
-
 func main() {
 	var err error
 	cfg = config{}
 	err = env.Parse(&cfg)
-	checkError(err)
+	domain.CheckError(err)
 
 	fmt.Printf("Initialize DeepSpeech..")
 
@@ -58,7 +53,7 @@ func main() {
 	pb.RegisterAudioProcessorServer(grpcServer, ap)
 
 	l, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.ListenPort))
-	checkError(err)
+	domain.CheckError(err)
 
 	log.Printf("Listening on tcp://0.0.0.0:%d\n", cfg.ListenPort)
 	grpcServer.Serve(l)
