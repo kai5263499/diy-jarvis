@@ -43,6 +43,7 @@ RUN apt-get update && \
 	go get github.com/caarlos0/env && \
 	go get github.com/mattetti/filebuffer && \
 	go get gopkg.in/jdkato/prose.v2 && \
+	go get github.com/nlopes/slack && \
 	# Install protoc tools
 	go get -u github.com/golang/protobuf/protoc-gen-go && \
 	curl -sLO https://github.com/google/protobuf/releases/download/v3.7.1/protoc-3.7.1-linux-x86_64.zip && \
