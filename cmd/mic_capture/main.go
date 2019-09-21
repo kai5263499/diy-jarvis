@@ -61,7 +61,8 @@ func paErrorText(err portaudio.Error) string {
 }
 
 func newProcessAudioRequest() *processAudioDataRequest {
-	newUUID, _ := uuid.NewV4()
+	newUUID, err := uuid.NewV4()
+	domain.CheckError(err)
 
 	f, err := ioutil.TempFile("", newUUID.String())
 	domain.CheckError(err)
