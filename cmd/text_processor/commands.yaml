@@ -1,0 +1,11 @@
+commands:
+  - command: "I'm home"
+    return-output: false
+    action-format: zygomys 
+    action: >
+      (system "echo welcome home")
+  - command: "make me a sandwich"
+    action-format: static
+    return-output: true
+    action: >
+      "I'm sorry Dave, I can't do that"
