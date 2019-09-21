@@ -8,6 +8,7 @@ ENV PATH=/go/bin:/deepspeech:$PATH
 ENV CGO_LDFLAGS="-L/deepspeech"
 ENV CGO_CXXFLAGS="-I/deepspeech"
 ENV LD_LIBRARY_PATH=/deepspeech:$LD_LIBRARY_PATH
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && \
     apt-get install -y \
@@ -23,6 +24,7 @@ RUN apt-get update && \
 	pulseaudio \
 	pulseaudio-utils \
 	libsoxr-dev \
+	tzdata \
     portaudio19-dev && \
 	# Install deepspeech
 	mkdir -p /deepspeech && \
@@ -39,10 +41,9 @@ RUN apt-get update && \
 	go get github.com/nu7hatch/gouuid && \
 	go get golang.org/x/net/context && \
 	go get -u google.golang.org/grpc && \
-	go get gopkg.in/jdkato/prose.v2 && \
 	go get github.com/caarlos0/env && \
 	go get github.com/mattetti/filebuffer && \
-	go get gopkg.in/jdkato/prose.v2 && \
+	go get gopkg.in/yaml.v2 && \
 	go get github.com/nlopes/slack && \
 	go get github.com/glycerine/zygomys/cmd/zygo && \
 	# Install protoc tools
