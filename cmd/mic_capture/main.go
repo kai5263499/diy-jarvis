@@ -30,7 +30,7 @@ const (
 )
 
 type config struct {
-	Duration              uint   `env:"DURATION"`
+	Duration              uint   `env:"DURATION" envDefault:"3"`
 	AudioProcessorAddress string `env:"AUDIO_PROCESSOR_ADDRESS"`
 }
 
