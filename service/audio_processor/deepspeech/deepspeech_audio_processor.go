@@ -3,20 +3,25 @@ package deepspeech_audio_processor
 import (
 	"fmt"
 	"io"
-	"github.com/mattetti/filebuffer"
-	"github.com/cryptix/wav"
+
 	ds "github.com/asticode/go-astideepspeech"
+	"github.com/cryptix/wav"
 	pb "github.com/kai5263499/diy-jarvis/generated"
+	"github.com/mattetti/filebuffer"
 )
 
-func New(m *ds.Model) *DeepSpeechAudioProcessor {
+func New(m *ds.Model, useTextProcessor bool, s *pb.EventResponder_SubscribeClient) *DeepSpeechAudioProcessor {
 	return &DeepSpeechAudioProcessor{
-		model: m,
+		model:                 m,
+		useTextProcessor:      useTextProcessor,
+		textEventClientStream: s,
 	}
 }
 
 type DeepSpeechAudioProcessor struct {
-	model *ds.Model
+	model                 *ds.Model
+	useTextProcessor      bool
+	textEventClientStream *pb.EventResponder_SubscribeClient
 }
 
 func metadataToString(m *ds.Metadata) string {
@@ -25,6 +30,18 @@ func metadataToString(m *ds.Metadata) string {
 		retval += item.Character()
 	}
 	return retval
+}
+
+func (p *DeepSpeechAudioProcessor) sendTextEventRequest(input string, req *pb.ProcessAudioRequest) {
+	textEventReq := &pb.TextEventRequest{
+		RequestId: req.RequestId,
+		SourceId:  req.SourceId,
+		Text:      input,
+	}
+
+	fmt.Printf("sending text event request %+#v\n", textEventReq)
+
+	(*p.textEventClientStream).Send(textEventReq)
 }
 
 func (p *DeepSpeechAudioProcessor) Subscribe(stream pb.AudioProcessor_SubscribeServer) error {
@@ -38,7 +55,7 @@ func (p *DeepSpeechAudioProcessor) Subscribe(stream pb.AudioProcessor_SubscribeS
 		if len(req.AudioData) < 1 {
 			continue
 		}
-	
+
 		f := filebuffer.New(req.AudioData)
 
 		r, err := wav.NewReader(f, int64(len(req.AudioData)))
@@ -59,11 +76,15 @@ func (p *DeepSpeechAudioProcessor) Subscribe(stream pb.AudioProcessor_SubscribeS
 
 		output := p.model.SpeechToText(d, uint(len(d)), 16000)
 
+		if p.useTextProcessor && len(output) > 0 {
+			p.sendTextEventRequest(output, req)
+		}
+
 		resp := &pb.ProcessAudioResponse{
-			RequestId: req.RequestId,
+			RequestId:      req.RequestId,
 			AudioStartTime: req.AudioStartTime,
-			ResponseCode: pb.ProcessAudioResponse_ACCEPTED,
-			Output: output,
+			ResponseCode:   pb.ProcessAudioResponse_ACCEPTED,
+			Output:         output,
 		}
 
 		stream.Send(resp)

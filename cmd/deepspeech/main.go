@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -26,10 +27,14 @@ type config struct {
 	NContext             int     `env:"NCONTEXT" envDefault:"9"`
 	LMWeight             float64 `env:"LM_WEIGHT" envDefault:"0.75"`
 	ValidWordCountWeight float64 `env:"VALID_WORDCOUNT_WEIGHT" envDefault:"1.85"`
+	UseTextProcessor     bool    `env:"USE_TEXT_PROCESSOR" envDefault:"true"`
+	TextProcessorAddress string  `env:"TEXT_PROCESSOR_ADDRESS" envDefault:"localhost:6001"`
 }
 
 var (
-	cfg config
+	cfg                      config
+	textEventProcessorClient pb.EventResponderClient
+	textEventClientStream    pb.EventResponder_SubscribeClient
 )
 
 func main() {
@@ -38,7 +43,7 @@ func main() {
 	err = env.Parse(&cfg)
 	domain.CheckError(err)
 
-	fmt.Printf("Initialize DeepSpeech..")
+	fmt.Printf("Initialize DeepSpeech..\n")
 
 	m := astideepspeech.New(cfg.Model, cfg.NCep, cfg.NContext, cfg.Alphabet, cfg.BeamWidth)
 	defer m.Close()
@@ -46,9 +51,22 @@ func main() {
 		m.EnableDecoderWithLM(cfg.Alphabet, cfg.LanguageModel, cfg.Trie, cfg.LMWeight, cfg.ValidWordCountWeight)
 	}
 
-	fmt.Printf("Done!\n")
+	if cfg.UseTextProcessor {
+		fmt.Printf("Connecting to text processor..")
 
-	ap := dsap.New(m)
+		conn, err := grpc.Dial(cfg.TextProcessorAddress, grpc.WithInsecure())
+		domain.CheckError(err)
+		defer conn.Close()
+
+		textEventProcessorClient = pb.NewEventResponderClient(conn)
+		textEventClientStream, err = textEventProcessorClient.Subscribe(context.Background())
+		domain.CheckError(err)
+		defer textEventClientStream.CloseSend()
+	}
+
+	fmt.Printf("Starting server\n")
+
+	ap := dsap.New(m, cfg.UseTextProcessor, &textEventClientStream)
 	grpcServer := grpc.NewServer()
 	pb.RegisterAudioProcessorServer(grpcServer, ap)
 
