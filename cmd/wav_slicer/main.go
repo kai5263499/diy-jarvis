@@ -13,7 +13,7 @@ import (
 	"github.com/cryptix/wav"
 	"github.com/kai5263499/diy-jarvis/domain"
 	pb "github.com/kai5263499/diy-jarvis/generated"
-	uuid "github.com/nu7hatch/gouuid"
+	"github.com/gofrs/uuid"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -31,14 +31,14 @@ var (
 )
 
 type processAudioDataRequest struct {
-	uuid        *uuid.UUID
+	uuid        uuid.UUID
 	wavWriter   *wav.Writer
 	tmpFileName string
 	msg         *pb.ProcessAudioRequest
 }
 
 func newProcessAudioRequest(meta *wav.File) *processAudioDataRequest {
-	newUUID, _ := uuid.NewV4()
+	newUUID := uuid.Must(uuid.NewV4())
 
 	f, err := ioutil.TempFile("", newUUID.String())
 	domain.CheckError(err)

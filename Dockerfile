@@ -38,7 +38,7 @@ RUN apt-get update && \
 	go get github.com/xlab/portaudio-go/portaudio && \
 	go get github.com/xlab/closer && \
 	go get github.com/zenwerk/go-wave && \
-	go get github.com/nu7hatch/gouuid && \
+	go get github.com/gofrs/uuid && \
 	go get golang.org/x/net/context && \
 	go get -u google.golang.org/grpc && \
 	go get github.com/caarlos0/env && \

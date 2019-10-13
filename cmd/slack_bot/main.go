@@ -13,7 +13,7 @@ import (
 	"github.com/kai5263499/diy-jarvis/domain"
 	pb "github.com/kai5263499/diy-jarvis/generated"
 	"github.com/nlopes/slack"
-	uuid "github.com/nu7hatch/gouuid"
+	"github.com/gofrs/uuid"
 	"google.golang.org/grpc"
 )
 
@@ -81,8 +81,7 @@ Loop:
 }
 
 func sendRequest(input string) {
-	newUUID, err := uuid.NewV4()
-	domain.CheckError(err)
+	newUUID := uuid.Must(uuid.NewV4())
 
 	req := &pb.TextEventRequest{
 		RequestId: newUUID.String(),

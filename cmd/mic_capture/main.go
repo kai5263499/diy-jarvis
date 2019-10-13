@@ -16,7 +16,7 @@ import (
 	"github.com/cryptix/wav"
 	"github.com/kai5263499/diy-jarvis/domain"
 	pb "github.com/kai5263499/diy-jarvis/generated"
-	uuid "github.com/nu7hatch/gouuid"
+	"github.com/gofrs/uuid"
 	"github.com/xlab/closer"
 	"github.com/xlab/portaudio-go/portaudio"
 	"golang.org/x/net/context"
@@ -44,7 +44,7 @@ var (
 )
 
 type processAudioDataRequest struct {
-	uuid        *uuid.UUID
+	uuid        uuid.UUID
 	wavWriter   *wav.Writer
 	tmpFileName string
 	msg         *pb.ProcessAudioRequest
@@ -61,8 +61,7 @@ func paErrorText(err portaudio.Error) string {
 }
 
 func newProcessAudioRequest() *processAudioDataRequest {
-	newUUID, err := uuid.NewV4()
-	domain.CheckError(err)
+	newUUID := uuid.Must(uuid.NewV4())
 
 	f, err := ioutil.TempFile("", newUUID.String())
 	domain.CheckError(err)
