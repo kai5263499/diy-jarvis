@@ -26,6 +26,7 @@ ENV NCEP="26"
 ENV NCONTEXT="9"
 ENV LM_WEIGHT="0.75"
 ENV VALID_WORDCOUNT_WEIGHT="1.85"
+ENV TEXT_PROCESSOR_ADDRESS=""
 
 COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/deepspeech/deps /
 COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/deepspeech/deepspeech /deepspeech
