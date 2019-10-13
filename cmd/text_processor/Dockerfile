@@ -15,6 +15,6 @@ ENV DURATION=10
 ENV AUDIO_PROCESSOR_ADDRESS=""
 
 COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/text_processor/deps /
-COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/text_processor/text_processor /mic_capture
+COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/text_processor/text_processor /text_processor
 
 ENTRYPOINT [ "/text_processor" ]
