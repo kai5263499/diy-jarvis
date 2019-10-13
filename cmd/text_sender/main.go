@@ -11,7 +11,7 @@ import (
 	"github.com/caarlos0/env"
 	"github.com/kai5263499/diy-jarvis/domain"
 	pb "github.com/kai5263499/diy-jarvis/generated"
-	uuid "github.com/nu7hatch/gouuid"
+	"github.com/gofrs/uuid"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
@@ -30,8 +30,7 @@ var (
 )
 
 func sendRequest(input string) {
-	newUUID, err := uuid.NewV4()
-	domain.CheckError(err)
+	newUUID := uuid.Must(uuid.NewV4())
 
 	req := &pb.TextEventRequest{
 		RequestId: newUUID.String(),
