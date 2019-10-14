@@ -3,10 +3,11 @@
 This repo contains the services that make up a simple DIY voice assistant framework. The components of this framework are broken up into docker images for easier development. These images are
 
 | Image | Description | Parameters |
-| ----------- | ----------- |
+| ----------- | ----------- | ----------- |
 | diy-jarvis-builder | Used for development and as the build container in our CI/CD pipeline ||
-| diy-jarvis-mic-capture | Captures a number of seconds of microphone data (determined by the `DURATION` environment variable)||
-| dit-jarvis-deepspeech | Uses the Mozilla Deep Speech library to transform raw wave files into |
+| diy-jarvis-mic-capture | Captures a number of seconds of microphone data (determined by the `DURATION` environment variable)| `DURATION` controls how much audio to collect before sending it on to the processor|
+| diy-jarvis-deepspeech | Uses the Mozilla Deep Speech library to transform raw wave files into ||
+| diy-jarvis-wav-slicer | Slices up a wav `FILE` and feeds the chunks to the audio processor engine | `FILE` is the full path of the file (in the container) to process| 
 
 ## Getting started
 
