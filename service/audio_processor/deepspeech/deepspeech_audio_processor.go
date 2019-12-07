@@ -74,7 +74,7 @@ func (p *DeepSpeechAudioProcessor) Subscribe(stream pb.AudioProcessor_SubscribeS
 			d = append(d, int16(s))
 		}
 
-		output := p.model.SpeechToText(d, uint(len(d)), 16000)
+		output := p.model.SpeechToText(d, uint(len(d)))
 
 		if p.useTextProcessor && len(output) > 0 {
 			p.sendTextEventRequest(output, req)

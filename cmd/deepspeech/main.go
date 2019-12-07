@@ -45,10 +45,10 @@ func main() {
 
 	fmt.Printf("Initialize DeepSpeech..\n")
 
-	m := astideepspeech.New(cfg.Model, cfg.NCep, cfg.NContext, cfg.Alphabet, cfg.BeamWidth)
+	m := astideepspeech.New(cfg.Model, cfg.BeamWidth)
 	defer m.Close()
 	if cfg.LanguageModel != "" {
-		m.EnableDecoderWithLM(cfg.Alphabet, cfg.LanguageModel, cfg.Trie, cfg.LMWeight, cfg.ValidWordCountWeight)
+		m.EnableDecoderWithLM(cfg.LanguageModel, cfg.Trie, cfg.LMWeight, cfg.ValidWordCountWeight)
 	}
 
 	if cfg.UseTextProcessor {

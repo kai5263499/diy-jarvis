@@ -8,29 +8,43 @@ check-pulseaudio:
 start-pulseaudio:
 	pulseaudio --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1;172.17.0.0/24 auth-anonymous=1" --exit-idle-time=-1 --daemon; true
 
+# Build deepspeech model image
+deepspeech-models-image:
+	docker build -t kai5263499/diy-jarvis-deepspeech-models -f cmd/deepspeech/Dockerfile.model .
+
+# Build deepspeech model image
+deepspeech-image:
+	docker build -t kai5263499/diy-jarvis-deepspeech -f cmd/deepspeech/Dockerfile .
+
 # Run an interactive shell for development and testing
-exec-interactive:
-	docker pull kai5263499/diy-jarvis-builder
+exec-interactive-mac:
 	docker run -it --rm \
 	-e PULSE_SERVER=docker.for.mac.localhost \
 	-v ~/.config/pulse:/home/pulseaudio/.config/pulse \
-	-v ~/Downloads/deepspeech-0.5.1-models:/deepspeech_models \
+	-v ~/Downloads/deepspeech-0.6.0-models:/deepspeech_models \
+	-v ~/code/deproot/src/github.com/kai5263499:/go/src/github.com/kai5263499 \
+	-w /go/src/github.com/kai5263499/diy-jarvis \
+	kai5263499/diy-jarvis-builder bash
+
+exec-interactive-linux:
+	docker run -it --rm \
+	-e PULSE_SERVER=172.17.0.1 \
+	-v ~/.config/pulse:/home/pulseaudio/.config/pulse \
+	-v ~/Downloads/deepspeech-0.6.0-models:/deepspeech_models \
 	-v ~/code/deproot/src/github.com/kai5263499:/go/src/github.com/kai5263499 \
 	-w /go/src/github.com/kai5263499/diy-jarvis \
 	kai5263499/diy-jarvis-builder bash
 
 # Run an image preconfigured with Mozilla Deep Speech and the latest English model
-deepspeech-service-linux:
-	docker pull kai5263499/diy-jarvis-deepspeech
-	docker run --gpus all -p 6000:6000 -d \
+deepspeech-service-mac:
+	docker run -p 6000:6000 -d \
 	-e TEXT_PROCESSOR_ADDRESS="docker.for.mac.localhost:6001" \
 	--name diy-jarvis-deepspeech \
 	kai5263499/diy-jarvis-deepspeech
 
-deepspeech-service-mac:
-	docker pull kai5263499/diy-jarvis-deepspeech
-	docker run -p 6000:6000 -d \
-	-e TEXT_PROCESSOR_ADDRESS="docker.for.mac.localhost:6001" \
+deepspeech-service-linux:
+	docker run --gpus all -p 6000:6000 -d \
+	-e TEXT_PROCESSOR_ADDRESS="172.17.0.1:6001" \
 	--name diy-jarvis-deepspeech \
 	kai5263499/diy-jarvis-deepspeech
 
@@ -86,5 +100,3 @@ text-processor:
 # Generate go stubs from proto definitions. This should be run inside of an interactive container
 go-protos:
 	protoc -I proto/ proto/*.proto --go_out=plugins=grpc:generated
-
-.PHONY: image exec-interactive protos pulseaudio deepspeech-service mic_capture
