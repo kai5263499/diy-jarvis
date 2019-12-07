@@ -20,7 +20,14 @@ exec-interactive:
 	kai5263499/diy-jarvis-builder bash
 
 # Run an image preconfigured with Mozilla Deep Speech and the latest English model
-deepspeech-service:
+deepspeech-service-linux:
+	docker pull kai5263499/diy-jarvis-deepspeech
+	docker run --gpus all -p 6000:6000 -d \
+	-e TEXT_PROCESSOR_ADDRESS="docker.for.mac.localhost:6001" \
+	--name diy-jarvis-deepspeech \
+	kai5263499/diy-jarvis-deepspeech
+
+deepspeech-service-mac:
 	docker pull kai5263499/diy-jarvis-deepspeech
 	docker run -p 6000:6000 -d \
 	-e TEXT_PROCESSOR_ADDRESS="docker.for.mac.localhost:6001" \
@@ -28,7 +35,7 @@ deepspeech-service:
 	kai5263499/diy-jarvis-deepspeech
 
 # Slice up a wav file (must be 16k sample rate and mono) and feed it to an audio processor (eg deepspeech-service)
-wav-slicer:
+wav-slicer-mac:
 	docker pull kai5263499/diy-jarvis-wav-slicer
 	docker run -it --rm \
 	-e AUDIO_PROCESSOR_ADDRESS="docker.for.mac.localhost:6000" \
@@ -37,14 +44,34 @@ wav-slicer:
 	-v ${DATA_DIR}:/data \
 	kai5263499/diy-jarvis-wav-slicer
 
+wav-slicer-linux:
+	docker pull kai5263499/diy-jarvis-wav-slicer
+	docker run -it --rm \
+	-e AUDIO_PROCESSOR_ADDRESS="172.17.0.1:6000" \
+	-e FILE=${FILE} \
+	--mount type=tmpfs,destination=/tmp \
+	-v ${DATA_DIR}:/data \
+	kai5263499/diy-jarvis-wav-slicer
+
 # Take a slice of sampled audio and feed it to the audio processor
-mic-capture:
+mic-capture-mac:
 	docker pull kai5263499/diy-jarvis-mic-capture
 	docker rm -f diy-jarvis-mic-capture; true
 	docker run -t -d \
 	-e DURATION=${DURATION} \
 	-e AUDIO_PROCESSOR_ADDRESS="docker.for.mac.localhost:6000" \
 	-e PULSE_SERVER=docker.for.mac.localhost \
+	-v ~/.config/pulse:/home/pulseaudio/.config/pulse \
+	--name diy-jarvis-mic-capture \
+	kai5263499/diy-jarvis-mic-capture
+
+mic-capture-linux:
+	docker pull kai5263499/diy-jarvis-mic-capture
+	docker rm -f diy-jarvis-mic-capture; true
+	docker run -t -d \
+	-e DURATION=${DURATION} \
+	-e AUDIO_PROCESSOR_ADDRESS="172.17.0.1:6000" \
+	-e PULSE_SERVER=172.17.0.1 \
 	-v ~/.config/pulse:/home/pulseaudio/.config/pulse \
 	--name diy-jarvis-mic-capture \
 	kai5263499/diy-jarvis-mic-capture
