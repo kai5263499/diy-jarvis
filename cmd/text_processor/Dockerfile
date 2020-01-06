@@ -14,6 +14,8 @@ LABEL MAINTAINER="Wes Widner <kai5263499@gmail.com>"
 ENV DURATION=10
 ENV AUDIO_PROCESSOR_ADDRESS=""
 
+EXPOSE 6001
+
 COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/text_processor/deps /
 COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/text_processor/text_processor /text_processor
 
