@@ -14,9 +14,9 @@ import (
 	"github.com/caarlos0/env"
 
 	"github.com/cryptix/wav"
+	"github.com/gofrs/uuid"
 	"github.com/kai5263499/diy-jarvis/domain"
 	pb "github.com/kai5263499/diy-jarvis/generated"
-	"github.com/gofrs/uuid"
 	"github.com/xlab/closer"
 	"github.com/xlab/portaudio-go/portaudio"
 	"golang.org/x/net/context"

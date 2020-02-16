@@ -10,10 +10,10 @@ import (
 	"sync"
 
 	"github.com/caarlos0/env"
+	"github.com/gofrs/uuid"
 	"github.com/kai5263499/diy-jarvis/domain"
 	pb "github.com/kai5263499/diy-jarvis/generated"
 	"github.com/nlopes/slack"
-	"github.com/gofrs/uuid"
 	"google.golang.org/grpc"
 )
 

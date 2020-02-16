@@ -9,9 +9,9 @@ import (
 	"sync/atomic"
 
 	"github.com/caarlos0/env"
+	"github.com/gofrs/uuid"
 	"github.com/kai5263499/diy-jarvis/domain"
 	pb "github.com/kai5263499/diy-jarvis/generated"
-	"github.com/gofrs/uuid"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
