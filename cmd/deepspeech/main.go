@@ -3,76 +3,151 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
-	"net"
+	"io"
+	"time"
 
 	"github.com/asticode/go-astideepspeech"
-
-	"google.golang.org/grpc"
+	"github.com/cryptix/wav"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gofrs/uuid"
+	"github.com/mattetti/filebuffer"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/caarlos0/env"
-	"github.com/kai5263499/diy-jarvis/domain"
+
+	ds "github.com/asticode/go-astideepspeech"
+	dj "github.com/kai5263499/diy-jarvis"
 	pb "github.com/kai5263499/diy-jarvis/generated"
-	dsap "github.com/kai5263499/diy-jarvis/service/audio_processor/deepspeech"
 )
 
 type config struct {
+	MQTTBroker           string  `env:"MQTT_BROKER"`
+	MQTTClientID         string  `env:"MQTT_CLIENT_ID" envDefault:"deepspeech"`
+	LogLevel             string  `env:"LOG_LEVEL" envDefault:"info"`
 	Alphabet             string  `env:"ALPHABET" envDefault:"/deepspeech_models/alphabet.txt"`
 	LanguageModel        string  `env:"LM" envDefault:"/deepspeech_models/lm.binary"`
 	Model                string  `env:"MODEL" envDefault:"/deepspeech_models/output_graph.pbmm"`
 	Trie                 string  `env:"TRIE" envDefault:"/deepspeech_models/trie"`
-	ListenPort           int     `env:"LISTEN_PORT" envDefault:"6000"`
 	BeamWidth            int     `env:"BEAM_WIDTH" envDefault:"500"`
 	NCep                 int     `env:"NCEP" envDefault:"26"`
 	NContext             int     `env:"NCONTEXT" envDefault:"9"`
 	LMWeight             float64 `env:"LM_WEIGHT" envDefault:"0.75"`
 	ValidWordCountWeight float64 `env:"VALID_WORDCOUNT_WEIGHT" envDefault:"1.85"`
-	UseTextProcessor     bool    `env:"USE_TEXT_PROCESSOR" envDefault:"true"`
-	TextProcessorAddress string  `env:"TEXT_PROCESSOR_ADDRESS" envDefault:"localhost:6001"`
 }
 
 var (
-	cfg                      config
-	textEventProcessorClient pb.EventResponderClient
-	textEventClientStream    pb.EventResponder_SubscribeClient
+	cfg       config
+	mqttComms *dj.MqttComms
+	model     *ds.Model
+	channels  map[string]uint64
 )
 
+func mqttMessageHandler(client mqtt.Client, msg mqtt.Message) {
+	logrus.Debugf("processing audio request with length %d from %s", len(msg.Payload()), msg.Topic())
+	f := filebuffer.New(msg.Payload())
+
+	r, err := wav.NewReader(f, int64(len(msg.Payload())))
+	if err != nil {
+		fmt.Printf("new reader error=%+#v\n", err)
+		return
+	}
+
+	var d []int16
+	for {
+		s, err := r.ReadSample()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			fmt.Printf("sample read error=%+#v\n", err)
+		}
+		d = append(d, int16(s))
+	}
+
+	output, sttErr := model.SpeechToText(d)
+	if sttErr != nil {
+		logrus.WithError(sttErr).Error("error speech to text")
+		return
+	}
+
+	logrus.Debugf("stt %s", output)
+
+	b := pb.Base{
+		Id:        uuid.Must(uuid.NewV4()).String(),
+		Timestamp: uint64(time.Now().Unix()),
+		Type:      pb.Type_OutputResponseType,
+		Text:      output,
+	}
+
+	if err := mqttComms.SendRequest(b); err != nil {
+		logrus.WithError(err).Error("error sending process audio response")
+	}
+}
+
+func subscribeToRawAudioChannel(msg pb.Base) {
+	if len(msg.SourceId) < 1 {
+		logrus.Error("SourceId is empty, skipping registration")
+		return
+	}
+
+	if _, found := channels[msg.SourceId]; found {
+		logrus.Debugf("SourceId %s found in cache, skipping", msg.SourceId)
+		return
+	}
+
+	logrus.Debugf("subscribing to SourceId %s", msg.SourceId)
+
+	if token := mqttComms.MQTTClient().Subscribe(msg.SourceId, 0, mqttMessageHandler); token.Wait() && token.Error() != nil {
+		logrus.WithError(token.Error()).Errorf("unable to subscribe to %s", msg.SourceId)
+		return
+	}
+
+	logrus.Debugf("subscription to SourceId %s successful", msg.SourceId)
+
+	channels[msg.SourceId] = msg.Timestamp
+}
+
 func main() {
-	var err error
 	cfg = config{}
-	err = env.Parse(&cfg)
-	domain.CheckError(err)
+	if err := env.Parse(&cfg); err != nil {
+		logrus.WithError(err).Fatal("config parse")
+	}
+
+	if level, err := logrus.ParseLevel(cfg.LogLevel); err != nil {
+		logrus.WithError(err).Fatal("parse log level")
+	} else {
+		logrus.SetLevel(level)
+	}
+
+	channels = make(map[string]uint64)
 
 	fmt.Printf("Initialize DeepSpeech..\n")
 
-	m := astideepspeech.New(cfg.Model, cfg.BeamWidth)
-	defer m.Close()
-	if cfg.LanguageModel != "" {
-		m.EnableDecoderWithLM(cfg.LanguageModel, cfg.Trie, cfg.LMWeight, cfg.ValidWordCountWeight)
+	var newModelErr error
+	model, newModelErr = astideepspeech.New(cfg.Model)
+	if newModelErr != nil {
+		logrus.WithError(newModelErr).Fatal("unable to create new model")
+	}
+	defer model.Close()
+
+	var newMqttErr error
+	mqttComms, newMqttErr = dj.NewMqttComms(cfg.MQTTClientID, cfg.MQTTBroker)
+	if newMqttErr != nil {
+		logrus.WithError(newMqttErr).Fatal("error creating mqtt comms")
 	}
 
-	if cfg.UseTextProcessor {
-		fmt.Printf("Connecting to text processor..")
+	g, _ := errgroup.WithContext(context.Background())
 
-		conn, err := grpc.Dial(cfg.TextProcessorAddress, grpc.WithInsecure())
-		domain.CheckError(err)
-		defer conn.Close()
+	g.Go(func() error {
+		for {
+			select {
+			case msg := <-mqttComms.RequestChan():
+				if msg.Type == pb.Type_RegisterAudioSourceRequestType {
+					subscribeToRawAudioChannel(msg)
+				}
+			}
+		}
+	})
 
-		textEventProcessorClient = pb.NewEventResponderClient(conn)
-		textEventClientStream, err = textEventProcessorClient.Subscribe(context.Background())
-		domain.CheckError(err)
-		defer textEventClientStream.CloseSend()
-	}
-
-	fmt.Printf("Starting server\n")
-
-	ap := dsap.New(m, cfg.UseTextProcessor, &textEventClientStream)
-	grpcServer := grpc.NewServer()
-	pb.RegisterAudioProcessorServer(grpcServer, ap)
-
-	l, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.ListenPort))
-	domain.CheckError(err)
-
-	log.Printf("Listening on tcp://0.0.0.0:%d\n", cfg.ListenPort)
-	grpcServer.Serve(l)
+	g.Wait()
 }

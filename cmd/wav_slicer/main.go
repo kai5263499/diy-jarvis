@@ -1,92 +1,100 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
-	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/caarlos0/env"
 	"github.com/cryptix/wav"
 	"github.com/gofrs/uuid"
-	"github.com/kai5263499/diy-jarvis/domain"
+	dj "github.com/kai5263499/diy-jarvis"
 	pb "github.com/kai5263499/diy-jarvis/generated"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 type config struct {
+	MQTTBroker            string `env:"MQTT_BROKER"`
+	MQTTClientID          string `env:"MQTT_CLIENT_ID" envDefault:"wavslicer"`
+	LogLevel              string `env:"LOG_LEVEL" envDefault:"info"`
 	AudioFileToProcess    string `env:"FILE"`
 	AudioProcessorAddress string `env:"AUDIO_PROCESSOR_ADDRESS"`
 }
 
 var (
-	numRequests  uint32
-	numResponses uint32
 	wavFilesRead uint32
 	cfg          config
+	mqttComms    *dj.MqttComms
+	sourceID     string
 )
 
 type processAudioDataRequest struct {
 	uuid        uuid.UUID
 	wavWriter   *wav.Writer
 	tmpFileName string
-	msg         *pb.ProcessAudioRequest
 }
 
 func newProcessAudioRequest(meta *wav.File) *processAudioDataRequest {
 	newUUID := uuid.Must(uuid.NewV4())
 
-	f, err := ioutil.TempFile("", newUUID.String())
-	domain.CheckError(err)
+	f, tmpFileErr := ioutil.TempFile("", newUUID.String())
+	if tmpFileErr != nil {
+		logrus.WithError(tmpFileErr).Fatal("error creating temporary file")
+	}
 
 	writer, _ := meta.NewWriter(f)
-
-	msg := &pb.ProcessAudioRequest{
-		RequestId:      newUUID.String(),
-		AudioStartTime: uint64(time.Now().Unix()),
-	}
 
 	return &processAudioDataRequest{
 		uuid:        newUUID,
 		wavWriter:   writer,
 		tmpFileName: f.Name(),
-		msg:         msg,
 	}
 }
 
-func processChunk(stream pb.AudioProcessor_SubscribeClient, req *processAudioDataRequest) {
-	var err error
-	err = req.wavWriter.Close()
-	domain.CheckError(err)
+func processChunk(req *processAudioDataRequest) {
+	if err := req.wavWriter.Close(); err != nil {
+		logrus.WithError(err).Fatal("error closing wav writer")
+	}
 
-	content, err := ioutil.ReadFile(req.tmpFileName)
-	domain.CheckError(err)
+	content, readFileErr := ioutil.ReadFile(req.tmpFileName)
+	if readFileErr != nil {
+		logrus.WithError(readFileErr).Fatal("error reading tmp file")
+	}
 
-	req.msg.AudioData = content
+	if token := mqttComms.MQTTClient().Publish(sourceID, 0, false, content); token.Error() != nil {
+		logrus.WithError(token.Error()).Errorf("error sending audio data to the topic %s", sourceID)
+		return
+	}
 
-	err = stream.Send(req.msg)
-	atomic.AddUint32(&numRequests, 1)
-	domain.CheckError(err)
+	logrus.Debugf("sent %d of audio data to channel %s", len(content), sourceID)
 
-	os.Remove(req.tmpFileName)
+	if err := os.Remove(req.tmpFileName); err != nil {
+		logrus.WithError(err).Errorf("error removing tmpFileName %s", req.tmpFileName)
+	}
+
+	logrus.Debugf("removed temp file")
 }
 
-func processWavFile(stream pb.AudioProcessor_SubscribeClient, wavFile string, wg *sync.WaitGroup) error {
-	defer wg.Done()
-	var err error
+func processWavFile(wavFile string) error {
+	fileStat, osStatErr := os.Stat(wavFile)
+	if osStatErr != nil {
+		logrus.WithError(osStatErr).Fatal("error stating wav file")
+		return osStatErr
+	}
 
-	fileStat, err := os.Stat(wavFile)
-	domain.CheckError(err)
+	f, wavOpenErr := os.Open(wavFile)
+	if wavOpenErr != nil {
+		logrus.WithError(wavOpenErr).Fatal("error opening wav file")
+		return wavOpenErr
+	}
 
-	f, err := os.Open(wavFile)
-	domain.CheckError(err)
-
-	r, err := wav.NewReader(f, fileStat.Size())
-	domain.CheckError(err)
+	r, newReaderErr := wav.NewReader(f, fileStat.Size())
+	if newReaderErr != nil {
+		logrus.WithError(newReaderErr).Fatal("error creating new wav reader")
+		return newReaderErr
+	}
 
 	samplesPerChunk := r.GetSampleRate() * uint32(10)
 
@@ -103,11 +111,11 @@ func processWavFile(stream pb.AudioProcessor_SubscribeClient, wavFile string, wg
 
 	keepReading := true
 	for keepReading {
-		data, err := r.ReadRawSample()
-		if err == io.EOF {
+		data, readRawSampleErr := r.ReadRawSample()
+		if readRawSampleErr == io.EOF {
 			break
-		} else if err != nil {
-			domain.CheckError(err)
+		} else if readRawSampleErr != nil {
+			logrus.WithError(readRawSampleErr).Fatal("error reading raw sample")
 		}
 
 		sampleCnt++
@@ -115,53 +123,54 @@ func processWavFile(stream pb.AudioProcessor_SubscribeClient, wavFile string, wg
 		req.wavWriter.WriteSample(data)
 
 		if sampleCnt%samplesPerChunk == 0 {
-			processChunk(stream, req)
+			processChunk(req)
 
 			chunksCnt++
 			req = newProcessAudioRequest(&meta)
 		}
 	}
 
-	atomic.AddUint32(&wavFilesRead, 1)
-
-	processChunk(stream, req)
+	processChunk(req)
 
 	return nil
 }
 
-func processResponses(stream pb.AudioProcessor_SubscribeClient, wg *sync.WaitGroup) {
-	defer wg.Done()
-	for {
-		resp, err := stream.Recv()
-		domain.CheckError(err)
-
-		fmt.Printf("%s\n", resp.Output)
-
-		atomic.AddUint32(&numResponses, 1)
-
-		if atomic.LoadUint32(&wavFilesRead) > 0 && (atomic.LoadUint32(&numRequests) == atomic.LoadUint32(&numResponses)) {
-			return
-		}
+func sendAudioRegistrationRequest() error {
+	msg := pb.Base{
+		Id:        uuid.Must(uuid.NewV4()).String(),
+		Timestamp: uint64(time.Now().Unix()),
+		Type:      pb.Type_RegisterAudioSourceRequestType,
+		SourceId:  sourceID,
 	}
+
+	if err := mqttComms.SendRequest(msg); err != nil {
+		logrus.WithError(err).Error("error sending audio channel id pulse")
+		return errors.Wrap(err, "error sending audio channel id pulse")
+	}
+
+	return nil
 }
 
 func main() {
 	cfg = config{}
-	err := env.Parse(&cfg)
-	domain.CheckError(err)
+	if err := env.Parse(&cfg); err != nil {
+		logrus.WithError(err).Fatal("config parse")
+	}
 
-	conn, err := grpc.Dial(cfg.AudioProcessorAddress, grpc.WithInsecure())
-	domain.CheckError(err)
-	defer conn.Close()
+	if level, err := logrus.ParseLevel(cfg.LogLevel); err != nil {
+		logrus.WithError(err).Fatal("parse log level")
+	} else {
+		logrus.SetLevel(level)
+	}
 
-	client := pb.NewAudioProcessorClient(conn)
-	stream, err := client.Subscribe(context.Background())
-	domain.CheckError(err)
-	defer stream.CloseSend()
+	sourceID = uuid.Must(uuid.NewV4()).String()
 
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go processWavFile(stream, cfg.AudioFileToProcess, &wg)
-	go processResponses(stream, &wg)
-	wg.Wait()
+	var newMqttErr error
+	mqttComms, newMqttErr = dj.NewMqttComms(cfg.MQTTClientID, cfg.MQTTBroker)
+	if newMqttErr != nil {
+		logrus.WithError(newMqttErr).Fatal("error creating mqtt comms")
+	}
+
+	sendAudioRegistrationRequest()
+	processWavFile(cfg.AudioFileToProcess)
 }

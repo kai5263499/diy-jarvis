@@ -1,58 +1,84 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
-	"log"
-	"net"
 
-	"google.golang.org/grpc"
-
+	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v2"
 
 	"github.com/caarlos0/env"
+	dj "github.com/kai5263499/diy-jarvis"
 	"github.com/kai5263499/diy-jarvis/domain"
 	pb "github.com/kai5263499/diy-jarvis/generated"
-	ep "github.com/kai5263499/diy-jarvis/service/event_processor/text"
+	"github.com/sirupsen/logrus"
 )
 
 type config struct {
-	ListenPort      int    `env:"LISTEN_PORT" envDefault:"6001"`
+	MQTTBroker      string `env:"MQTT_BROKER"`
+	MQTTClientID    string `env:"MQTT_CLIENT_ID" envDefault:"textprocessor"`
+	LogLevel        string `env:"LOG_LEVEL" envDefault:"info"`
 	CommandSpecYaml string `env:"COMMAND_SPEC_YAML" envDefault:"commands.yaml"`
 	Keyword         string `env:"KEYWORD", envDefault:"Jarvis"`
 }
 
 var (
-	cfg config
+	cfg       config
+	mqttComms *dj.MqttComms
+	commands  map[string]domain.TextEventCommand
 )
 
+func processText(evt *pb.Base) {
+	if action, ok := commands[evt.Text]; ok {
+		fmt.Printf("got command %s, performing action %+#v\n", evt.Text, action)
+	} else {
+		// Ignore command
+	}
+}
+
 func main() {
-	var err error
 	cfg = config{}
-	err = env.Parse(&cfg)
-	domain.CheckError(err)
+	if err := env.Parse(&cfg); err != nil {
+		logrus.WithError(err).Fatal("parse configs")
+	}
+
+	if level, err := logrus.ParseLevel(cfg.LogLevel); err != nil {
+		logrus.WithError(err).Fatal("parse log level")
+	} else {
+		logrus.SetLevel(level)
+	}
 
 	fmt.Printf("Initialize Text Event Processor..\n")
 
 	var yamlCommands domain.TextEventCommands
-	yamlData, err := ioutil.ReadFile(cfg.CommandSpecYaml)
-	domain.CheckError(err)
+	yamlData, readFileErr := ioutil.ReadFile(cfg.CommandSpecYaml)
+	if readFileErr != nil {
+		logrus.WithError(readFileErr).Fatal("error reading file")
+	}
 
-	err = yaml.Unmarshal([]byte(yamlData), &yamlCommands)
-	domain.CheckError(err)
+	if err := yaml.Unmarshal([]byte(yamlData), &yamlCommands); err != nil {
+		logrus.WithError(readFileErr).Fatal("error unmarshaling yaml")
+	}
 
-	commands := make(map[string]domain.TextEventCommand)
+	commands = make(map[string]domain.TextEventCommand)
 	for _, c := range yamlCommands.Commands {
 		commands[c.Command] = c
 	}
 
-	tp := ep.New(cfg.Keyword, commands)
-	grpcServer := grpc.NewServer()
-	pb.RegisterEventResponderServer(grpcServer, tp)
+	g, _ := errgroup.WithContext(context.Background())
 
-	l, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.ListenPort))
-	domain.CheckError(err)
+	g.Go(func() error {
+		for {
+			select {
+			case msg := <-mqttComms.RequestChan():
+				if msg.Type == pb.Type_TextRequestType {
+					processText(&msg)
+				}
+			}
+		}
+	})
 
-	log.Printf("Listening on tcp://0.0.0.0:%d\n", cfg.ListenPort)
-	grpcServer.Serve(l)
+	g.Wait()
+
 }

@@ -2,25 +2,25 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/binary"
-	"fmt"
 	"io/ioutil"
 	"os"
-	"sync"
 	"sync/atomic"
 	"time"
 	"unsafe"
 
 	"github.com/caarlos0/env"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/cryptix/wav"
 	"github.com/gofrs/uuid"
-	"github.com/kai5263499/diy-jarvis/domain"
+	dj "github.com/kai5263499/diy-jarvis"
 	pb "github.com/kai5263499/diy-jarvis/generated"
 	"github.com/xlab/closer"
 	"github.com/xlab/portaudio-go/portaudio"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 )
 
 const (
@@ -30,8 +30,11 @@ const (
 )
 
 type config struct {
-	Duration              uint   `env:"DURATION" envDefault:"3"`
-	AudioProcessorAddress string `env:"AUDIO_PROCESSOR_ADDRESS"`
+	MQTTBroker           string        `env:"MQTT_BROKER"`
+	MQTTClientID         string        `env:"MQTT_CLIENT_ID" envDefault:"miccapture"`
+	LogLevel             string        `env:"LOG_LEVEL" envDefault:"info"`
+	PulseInterval        time.Duration `env:"PULSE_DURATION" envDefault:"30s"`
+	AudioCaptureDuration uint          `env:"DURATION" envDefault:"3"`
 }
 
 var (
@@ -39,104 +42,132 @@ var (
 
 	numRequests  uint32
 	numResponses uint32
-	stream       pb.AudioProcessor_SubscribeClient
 	cfg          config
+	mqttComms    *dj.MqttComms
+	sourceID     string
 )
 
 type processAudioDataRequest struct {
 	uuid        uuid.UUID
 	wavWriter   *wav.Writer
 	tmpFileName string
-	msg         *pb.ProcessAudioRequest
-}
-
-func checkPAError(err portaudio.Error) {
-	if portaudio.ErrorCode(err) != portaudio.PaNoError {
-		panic(fmt.Sprintf("err=%s", paErrorText(err)))
-	}
-}
-
-func paErrorText(err portaudio.Error) string {
-	return portaudio.GetErrorText(err)
 }
 
 func newProcessAudioRequest() *processAudioDataRequest {
 	newUUID := uuid.Must(uuid.NewV4())
 
-	f, err := ioutil.TempFile("", newUUID.String())
-	domain.CheckError(err)
+	f, tmpFileErr := ioutil.TempFile("", newUUID.String())
+	if tmpFileErr != nil {
+		logrus.WithError(tmpFileErr).Errorf("creating temp file")
+		return nil
+	}
 
 	meta := wav.File{
 		Channels:        channels,
 		SampleRate:      sampleRate,
 		SignificantBits: 16,
 	}
-	writer, _ := meta.NewWriter(f)
-
-	msg := &pb.ProcessAudioRequest{
-		RequestId:      newUUID.String(),
-		AudioStartTime: uint64(time.Now().Unix()),
+	writer, newWriterErr := meta.NewWriter(f)
+	if newWriterErr != nil {
+		logrus.WithError(newWriterErr).Errorf("temp wav writer")
+		return nil
 	}
 
 	return &processAudioDataRequest{
 		uuid:        newUUID,
 		wavWriter:   writer,
 		tmpFileName: f.Name(),
-		msg:         msg,
 	}
 }
 
 func processChunk(req *processAudioDataRequest) {
-	var err error
+	if err := req.wavWriter.Close(); err != nil {
+		logrus.WithError(err).Errorf("error closing wavWriter")
+		return
+	}
 
-	err = req.wavWriter.Close()
-	domain.CheckError(err)
+	content, readFileErr := ioutil.ReadFile(req.tmpFileName)
+	if readFileErr != nil {
+		logrus.WithError(readFileErr).Errorf("error reading tmpFileName %s", req.tmpFileName)
+	}
 
-	content, err := ioutil.ReadFile(req.tmpFileName)
-	domain.CheckError(err)
+	if token := mqttComms.MQTTClient().Publish(sourceID, 0, false, content); token.Error() != nil {
+		logrus.WithError(token.Error()).Errorf("error sending audio data to the topic %s", sourceID)
+		return
+	}
 
-	req.msg.AudioData = content
+	logrus.Debugf("sent %d of audio data to channel %s", len(content), sourceID)
 
-	err = stream.Send(req.msg)
 	atomic.AddUint32(&numRequests, 1)
-	domain.CheckError(err)
 
-	os.Remove(req.tmpFileName)
+	if err := os.Remove(req.tmpFileName); err != nil {
+		logrus.WithError(err).Errorf("error removing tmpFileName %s", req.tmpFileName)
+	}
+
+	logrus.Debugf("removed temp file")
 }
 
-func processMicInput(wg *sync.WaitGroup) {
-	defer wg.Done()
+func processMicInput() error {
 	defer closer.Close()
 
-	var paErr portaudio.Error
-
-	paErr = portaudio.Initialize()
-	checkPAError(paErr)
+	if paErr := portaudio.Initialize(); portaudio.ErrorCode(paErr) != portaudio.PaNoError {
+		logrus.WithFields(logrus.Fields{
+			"pa-error-code": portaudio.ErrorCode(paErr),
+			"pa-error-text": portaudio.GetErrorText(paErr),
+		}).Fatal("initializing port audio")
+		return errors.New("unable to initialize mic input")
+	}
 
 	closer.Bind(func() {
-		paErr := portaudio.Terminate()
-		checkPAError(paErr)
+		if paErr := portaudio.Terminate(); portaudio.ErrorCode(paErr) != portaudio.PaNoError {
+			logrus.WithFields(logrus.Fields{
+				"pa-error-code": portaudio.ErrorCode(paErr),
+				"pa-error-text": portaudio.GetErrorText(paErr),
+			}).Fatal("port audio terminate")
+			return
+		}
 	})
 
 	var paStream *portaudio.Stream
-	paErr = portaudio.OpenDefaultStream(&paStream, channels, 0, sampleFormat, sampleRate,
-		samplesPerChannel, paCallback, nil)
-	checkPAError(paErr)
+	if paErr := portaudio.OpenDefaultStream(&paStream, channels, 0, sampleFormat, sampleRate,
+		samplesPerChannel, paCallback, nil); portaudio.ErrorCode(paErr) != portaudio.PaNoError {
+		logrus.WithFields(logrus.Fields{
+			"pa-error-code": portaudio.ErrorCode(paErr),
+			"pa-error-text": portaudio.GetErrorText(paErr),
+		}).Fatal("port audio open default stream")
+		return errors.New("error opening default stream")
+	}
 
 	closer.Bind(func() {
-		paErr := portaudio.CloseStream(paStream)
-		checkPAError(paErr)
+		if paErr := portaudio.CloseStream(paStream); portaudio.ErrorCode(paErr) != portaudio.PaNoError {
+			logrus.WithFields(logrus.Fields{
+				"pa-error-code": portaudio.ErrorCode(paErr),
+				"pa-error-text": portaudio.GetErrorText(paErr),
+			}).Fatal("portaudio close stream")
+			return
+		}
 	})
 
-	paErr = portaudio.StartStream(paStream)
-	checkPAError(paErr)
+	if paErr := portaudio.StartStream(paStream); portaudio.ErrorCode(paErr) != portaudio.PaNoError {
+		logrus.WithFields(logrus.Fields{
+			"pa-error-code": portaudio.ErrorCode(paErr),
+		}).Fatal("portaudio start stream")
+		return errors.New("error starting portaudio stream")
+	}
 
 	closer.Bind(func() {
-		paErr := portaudio.StopStream(paStream)
-		checkPAError(paErr)
+		if paErr := portaudio.StopStream(paStream); portaudio.ErrorCode(paErr) != portaudio.PaNoError {
+			logrus.WithFields(logrus.Fields{
+				"pa-error-code": portaudio.ErrorCode(paErr),
+				"pa-error-text": portaudio.GetErrorText(paErr),
+			}).Fatal("portaudio stop stream")
+			return
+		}
 	})
 
 	closer.Hold()
+
+	return nil
 }
 
 func paCallback(input unsafe.Pointer, _ unsafe.Pointer, sampleCount uint,
@@ -158,44 +189,81 @@ func paCallback(input unsafe.Pointer, _ unsafe.Pointer, sampleCount uint,
 	req.wavWriter.Write(buf.Bytes())
 
 	processChunk(req)
-	// if !ok {
-	// 	return statusAbort
-	// }
 
 	return statusContinue
 }
 
-func processResponses(wg *sync.WaitGroup) {
-	defer wg.Done()
-	for {
-		resp, err := stream.Recv()
-		domain.CheckError(err)
-
-		fmt.Printf("%s\n", resp.Output)
+func sendAudioRegistrationRequest() error {
+	msg := pb.Base{
+		Id:        uuid.Must(uuid.NewV4()).String(),
+		Timestamp: uint64(time.Now().Unix()),
+		Type:      pb.Type_RegisterAudioSourceRequestType,
+		SourceId:  sourceID,
 	}
+
+	if err := mqttComms.SendRequest(msg); err != nil {
+		logrus.WithError(err).Error("error sending audio channel id pulse")
+		return errors.Wrap(err, "error sending audio channel id pulse")
+	}
+
+	return nil
 }
 
 func main() {
-	var err error
-
 	cfg = config{}
-	err = env.Parse(&cfg)
-	domain.CheckError(err)
+	if err := env.Parse(&cfg); err != nil {
+		logrus.WithError(err).Fatal("config parse")
+	}
 
-	conn, err := grpc.Dial(cfg.AudioProcessorAddress, grpc.WithInsecure())
-	domain.CheckError(err)
-	defer conn.Close()
+	if level, err := logrus.ParseLevel(cfg.LogLevel); err != nil {
+		logrus.WithError(err).Fatal("parse log level")
+	} else {
+		logrus.SetLevel(level)
+	}
 
-	client := pb.NewAudioProcessorClient(conn)
-	stream, err = client.Subscribe(context.Background())
-	domain.CheckError(err)
-	defer stream.CloseSend()
+	var newMqttErr error
+	mqttComms, newMqttErr = dj.NewMqttComms(cfg.MQTTClientID, cfg.MQTTBroker)
+	if newMqttErr != nil {
+		logrus.WithError(newMqttErr).Fatal("error creating mqtt comms")
+	}
 
-	samplesPerChannel = sampleRate * cfg.Duration
+	sourceID = uuid.Must(uuid.NewV4()).String()
+	sendAudioRegistrationRequest()
 
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go processMicInput(&wg)
-	go processResponses(&wg)
-	wg.Wait()
+	samplesPerChannel = sampleRate * cfg.AudioCaptureDuration
+
+	g, _ := errgroup.WithContext(context.Background())
+
+	g.Go(func() error {
+		for {
+			ticker := time.NewTicker(cfg.PulseInterval)
+			for {
+				select {
+				case <-ticker.C:
+					if err := sendAudioRegistrationRequest(); err != nil {
+						return err
+					}
+				}
+			}
+		}
+	})
+
+	g.Go(func() error {
+		for {
+			if err := processMicInput(); err != nil {
+				return err
+			}
+		}
+	})
+
+	g.Go(func() error {
+		for {
+			select {
+			case _ = <-mqttComms.RequestChan():
+				// react to some messages here
+			}
+		}
+	})
+
+	g.Wait()
 }

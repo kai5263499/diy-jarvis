@@ -1,69 +1,28 @@
 syntax = "proto3";
 
-option go_package = "generated";
+option go_package = ".;generated";
 
-service AudioProcessor {
-    rpc Subscribe(stream ProcessAudioRequest) returns (stream ProcessAudioResponse) {}
+enum Type {
+    RegisterAudioSourceRequestType = 0;
+    OutputRequestType = 1;
+    TextRequestType = 2;
+    RegisterAudioSourceResponseType = 3;
+    OutputResponseType = 4;
+    TextResponseType = 5;
 }
 
-service EventResponder {
-    rpc Subscribe (stream TextEventRequest) returns (stream TextEventResponse) {}
+enum Code {
+    ERROR = 0;
+    ACCEPTED = 1;
 }
 
-service AudioOutput {
-    rpc Subscribe (stream OutputRequest) returns (stream OutputResponse) {}
+message Base {
+    Type Type = 1;
+    Code Code = 2;
+    string Id = 3;
+    string SourceId = 4;
+    uint64 Timestamp = 5;
+    string Text = 6;
+    string SinkId = 7;
 }
 
-message ProcessAudioRequest {
-    string RequestId = 1;
-    string SourceId = 2;
-    uint64 AudioStartTime = 3;
-    bytes AudioData = 5;
-}
-
-message ProcessAudioResponse {
-    enum ProcessAudioResponseCode {
-        ERROR = 0;
-        ACCEPTED = 1;
-    }
-
-    string requestId = 1;
-    ProcessAudioResponseCode ResponseCode = 2;
-    uint64 AudioStartTime = 3;
-    string Output = 4;
-}
-
-message TextEventRequest {
-    string RequestId = 1;
-    string SourceId = 2;
-    string Text = 4;
-}
-
-message TextEventResponse {
-    string RequestId = 1;
-    string SourceId = 2;
-
-    enum ProcessAudioResponseCode {
-        ERROR = 0;
-        ACCEPTED = 1;
-    }
-    ProcessAudioResponseCode responseCode = 3;
-}
-
-message OutputRequest {
-    string SinkId = 1;
-    string RequestId = 2;
-    string Text = 3;
-    string MediaURL = 4;
-}
-
-message OutputResponse {
-    enum AudioOutputResponseCode {
-        ERROR = 0;
-        ACCEPTED = 1;
-    }
-
-    uint64 RequestId = 1;
-    string SinkId = 2;
-    AudioOutputResponseCode ResponseCode = 3;
-}

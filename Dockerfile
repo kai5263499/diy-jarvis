@@ -6,7 +6,7 @@ LABEL MAINTAINER="Wes Widner <kai5263499@gmail.com>"
 ARG GPU_PLATFORM=cpu
 
 # DEEPSPEECH_VERSION is the version of deepspeech to use
-ARG DEEPSPEECH_VERSION=0.6.0
+ARG DEEPSPEECH_VERSION=0.7.1
 
 ENV CGO_ENABLED=1 CGO_CPPFLAGS="-I/usr/include"
 ENV GOPATH=/go
@@ -34,7 +34,10 @@ RUN apt-get update && \
 	pulseaudio-utils \
 	libsoxr-dev \
 	tzdata \
-    portaudio19-dev
+    portaudio19-dev \
+	libczmq4 \
+	libczmq-dev \
+	libsodium-dev
 
 RUN echo "Install golang" && \
 	curl -sLO https://dl.google.com/go/go1.13.3.linux-amd64.tar.gz && \

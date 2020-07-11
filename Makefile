@@ -30,7 +30,7 @@ exec-interactive-linux:
 	docker run -it --rm \
 	-e PULSE_SERVER=172.17.0.1 \
 	-v ~/.config/pulse:/home/pulseaudio/.config/pulse \
-	-v ~/Downloads/deepspeech-0.6.0-models:/deepspeech_models \
+	-v ~/Downloads/deepspeech-0.7.4-models:/deepspeech_models \
 	-v ~/code/deproot/src/github.com/kai5263499:/go/src/github.com/kai5263499 \
 	-w /go/src/github.com/kai5263499/diy-jarvis \
 	kai5263499/diy-jarvis-builder bash
@@ -38,13 +38,11 @@ exec-interactive-linux:
 # Run an image preconfigured with Mozilla Deep Speech and the latest English model
 deepspeech-service-mac:
 	docker run -p 6000:6000 -d \
-	-e TEXT_PROCESSOR_ADDRESS="docker.for.mac.localhost:6001" \
 	--name diy-jarvis-deepspeech \
 	kai5263499/diy-jarvis-deepspeech
 
 deepspeech-service-linux:
 	docker run --gpus all -p 6000:6000 -d \
-	-e TEXT_PROCESSOR_ADDRESS="172.17.0.1:6001" \
 	--name diy-jarvis-deepspeech \
 	kai5263499/diy-jarvis-deepspeech
 
@@ -97,6 +95,13 @@ text-processor:
 	--name diy-jarvis-text-processor \
 	kai5263499/diy-jarvis-text-processor
 
+mqtt-mosquito:
+	docker run -it \
+	-p 1883:1883 -p 9001:9001 \
+	-v /mosquitto/data \
+	-v /mosquitto/log \
+	eclipse-mosquitto
+
 # Generate go stubs from proto definitions. This should be run inside of an interactive container
 go-protos:
-	protoc -I proto/ proto/*.proto --go_out=plugins=grpc:generated
+	protoc -I proto/ proto/*.proto --go_out=generated

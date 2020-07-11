@@ -1,50 +1,80 @@
-version: '3.2'
-services:  
-  diy-jarvis-text-processor:
-    image: kai5263499/diy-jarvis-text-processor
-    container_name: diy-jarvis-text-processor
-    ports:
-      - "6001:6001"
-    environment: 
-      COMMAND_SPEC_YAML: "/data/commands.yaml"
-    volumes:
-        - type: bind
-          source: ./cmd/text_processor/commands.yaml
-          target: /data/commands.yaml
-    deploy:
-      restart_policy:
-        condition: on-failure
-  diy-jarvis-mic-capture:
-    image: kai5263499/diy-jarvis-mic-capture
-    container_name: diy-jarvis-mic-capture
-    environment:
-      PULSE_SERVER: "172.17.0.1"
-      DURATION: 3
-      AUDIO_PROCESSOR_ADDRESS: "172.17.0.1:6000"
-    depends_on:
-      - diy-jarvis-deepspeech
-    volumes:
-      - type: bind
-        source: /home/wes/.config/pulse
-        target: /home/pulseaudio/.config/pulse
-    deploy:
-      restart_policy:
-        condition: on-failure
-  diy-jarvis-deepspeech:
+version: '3'
+services:
+  builder:
+    image: kai5263499/diy-jarvis-deepspeech-builder
+    build:
+      context: .
+      dockerfile: Dockerfile
+  deepspeech-models:
+    image: kai5263499/diy-jarvis-deepspeech-models
+    build:
+      context: .
+      dockerfile: cmd/deepspeech/Dockerfile.model
+  deepspeech:
     image: kai5263499/diy-jarvis-deepspeech
-    container_name: diy-jarvis-deepspeech
     environment: 
-      TEXT_PROCESSOR_ADDRESS: "172.17.0.1:6001"
-    depends_on: 
-      - "diy-jarvis-text-processor"
-    volumes:
-        - type: bind
-          source: /home/wes/Downloads/deepspeech-0.6.0-models
-          target: /deepspeech_models
-    ports:
-      - "6000:6000"
-    deploy:
-      restart_policy:
-        condition: on-failure
+      - MQTT_BROKER=tcp://mqtt:1883
+      - DEBUG
+    build:
+      context: .
+      dockerfile: cmd/deepspeech/Dockerfile
+  mic_capture:
+    image: kai5263499/diy-jarvis-mic_capture
+    environment: 
+      - MQTT_BROKER=tcp://mqtt:1883
+      - DEBUG
+    build:
+      context: .
+      dockerfile: cmd/mic_capture/Dockerfile
+  # deepspeech:
+
+  #   restart: always
+  #   volumes: 
+  #     - tmp-content:/tmp
+  #   image: "kai5263499/rhema-processor:latest"
+  #   build: 
+  #     context: .
+  #     dockerfile: cmd/processor/Dockerfile
+  # storage:
+  #   environment: 
+  #     - MQTT_BROKER=tcp://mqtt:1883
+  #     - GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp/service-account-file.json
+  #     - BUCKET
+  #   restart: always
+  #   volumes:
+  #     - tmp-content:/tmp
+  #     - ${LOCAL_PATH}:/data
+  #     - ${GOOGLE_APPLICATION_CREDENTIALS}:/tmp/gcp/service-account-file.json
+  #   image: "kai5263499/rhema-storage:latest"
+  #   build:
+  #     context: .
+  #     dockerfile: cmd/storage/Dockerfile
+  # apiserver:
+  #   environment: 
+  #     - MQTT_BROKER=tcp://mqtt:1883
+  #     - GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp/service-account-file.json
+  #   restart: always
+  #   volumes:
+  #     - ${GOOGLE_APPLICATION_CREDENTIALS}:/tmp/gcp/service-account-file.json
+  #   image: "kai5263499/rhema-apiserver:latest"
+  #   ports:
+  #     - "8081:8080"
+  #   build:
+  #     context: .
+  #     dockerfile: cmd/apiserver/Dockerfile
+  # contentbot:
+  #   environment: 
+  #     - MQTT_BROKER=tcp://mqtt:1883
+  #     - SLACK_TOKEN
+  #     - CHANNELS
+  #   restart: always
+  #   image: "kai5263499/diy-jarvis-:latest"
+  #   build:
+  #     context: .
+  #     dockerfile: cmd/contentbot/Dockerfile
+  mqtt:
+    image: "eclipse-mosquitto:latest"
+    restart: always
 volumes:
-  modeldata:
+  tmp-content:
+  
