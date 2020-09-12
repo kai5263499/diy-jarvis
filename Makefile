@@ -2,9 +2,11 @@
 builder-image:
 	docker build -t kai5263499/diy-jarvis-builder .
 
+# Should tell you the pulseaudio daemon is running
 check-pulseaudio:
 	pulseaudio --check -v
 
+# Helpful for Mac hosts
 start-pulseaudio:
 	pulseaudio --load="module-native-protocol-tcp auth-ip-acl=127.0.0.1;172.17.0.0/24 auth-anonymous=1" --exit-idle-time=-1 --daemon; true
 
@@ -58,7 +60,6 @@ run-mic-capture:
 	kai5263499/diy-jarvis-mic-capture
 
 run-text-processor:
-	docker pull kai5263499/diy-jarvis-text-processor
 	docker run -d \
 	--name diy-jarvis-text-processor \
 	kai5263499/diy-jarvis-text-processor
