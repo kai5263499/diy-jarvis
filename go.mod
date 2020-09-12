@@ -3,7 +3,7 @@ module github.com/kai5263499/diy-jarvis
 go 1.13
 
 require (
-	github.com/asticode/go-astideepspeech v0.9.0
+	github.com/asticode/go-astideepspeech v0.10.0
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/cryptix/wav v0.0.0-20180415113528-8bdace674401
 	github.com/davecgh/go-spew v1.1.1

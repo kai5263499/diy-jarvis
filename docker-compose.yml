@@ -1,31 +1,18 @@
 version: '3'
 services:
-  builder:
-    image: kai5263499/diy-jarvis-deepspeech-builder
-    build:
-      context: .
-      dockerfile: Dockerfile
-  deepspeech-models:
-    image: kai5263499/diy-jarvis-deepspeech-models
-    build:
-      context: .
-      dockerfile: cmd/deepspeech/Dockerfile.model
   deepspeech:
     image: kai5263499/diy-jarvis-deepspeech
     environment: 
       - MQTT_BROKER=tcp://mqtt:1883
       - DEBUG
-    build:
-      context: .
-      dockerfile: cmd/deepspeech/Dockerfile
+      - MODEL=/deepspeech_models/deepspeech-0.8.2-models.pbmm
   mic_capture:
     image: kai5263499/diy-jarvis-mic_capture
     environment: 
       - MQTT_BROKER=tcp://mqtt:1883
       - DEBUG
-    build:
-      context: .
-      dockerfile: cmd/mic_capture/Dockerfile
+      - PULSE_CONFIG=~/.config/pulse
+      - PULSE_SERVER=172.17.0.1
   mqtt:
     image: "eclipse-mosquitto:latest"
     restart: always

@@ -1,13 +1,14 @@
 FROM ubuntu:18.04 as models
 
 # DEEPSPEECH_VERSION is the version of deepspeech to use
-ARG DEEPSPEECH_VERSION=0.7.1
+ARG DEEPSPEECH_VERSION=0.8.2
 
 RUN apt-get update && \
     apt-get install -y wget && \
     mkdir -p /deepspeech_models
 
 RUN wget https://github.com/mozilla/DeepSpeech/releases/download/v${DEEPSPEECH_VERSION}/deepspeech-${DEEPSPEECH_VERSION}-models.pbmm -O /deepspeech_models/deepspeech.pbmm && \
+    wget https://github.com/mozilla/DeepSpeech/releases/download/v${DEEPSPEECH_VERSION}/deepspeech-${DEEPSPEECH_VERSION}-models.tflite -O /deepspeech_models/deepspeech.tflite && \
     wget https://github.com/mozilla/DeepSpeech/releases/download/v${DEEPSPEECH_VERSION}/deepspeech-${DEEPSPEECH_VERSION}-models.scorer -O /deepspeech_models/deepspeech.scorer
 
 FROM scratch
@@ -15,3 +16,5 @@ FROM scratch
 LABEL MAINTAINER="Wes Widner <kai5263499@gmail.com>"
 
 COPY --from=models /deepspeech_models /deepspeech_models
+
+VOLUME [ "/deepspeech_models" ]

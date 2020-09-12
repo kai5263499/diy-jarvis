@@ -9,3 +9,4 @@ cmd/wav_slicer/wav_slicer
 environ.rc
 mac-environ.rc
 linux-environ.rc
+testdata/harvard-sentences.*

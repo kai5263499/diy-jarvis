@@ -121,8 +121,6 @@ func main() {
 
 	channels = make(map[string]uint64)
 
-	fmt.Printf("Initialize DeepSpeech..\n")
-
 	var newModelErr error
 	model, newModelErr = astideepspeech.New(cfg.Model)
 	if newModelErr != nil {
@@ -130,11 +128,15 @@ func main() {
 	}
 	defer model.Close()
 
+	logrus.Info("Initialized DeepSpeech")
+
 	var newMqttErr error
 	mqttComms, newMqttErr = dj.NewMqttComms(cfg.MQTTClientID, cfg.MQTTBroker)
 	if newMqttErr != nil {
 		logrus.WithError(newMqttErr).Fatal("error creating mqtt comms")
 	}
+
+	logrus.Infof("Connected to MQTT broker %s with Client ID %s", cfg.MQTTBroker, cfg.MQTTClientID)
 
 	g, _ := errgroup.WithContext(context.Background())
 
@@ -148,6 +150,8 @@ func main() {
 			}
 		}
 	})
+
+	logrus.Info("Listening for requests")
 
 	g.Wait()
 }
