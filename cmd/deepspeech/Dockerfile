@@ -18,7 +18,7 @@ LABEL MAINTAINER="Wes Widner <kai5263499@gmail.com>"
 
 ENV ALPHABET="/deepspeech_models/alphabet.txt"
 ENV LANGUAGE_MODEL="/deepspeech_models/lm.binary"
-ENV MODEL="/deepspeech_models/output_graph.pbmm"
+ENV MODEL="/deepspeech_models/deepspeech.pbmm"
 ENV TRIE="/deepspeech_models/trie"
 ENV LISTEN_PORT="6000"
 ENV BEAM_WIDTH="500"

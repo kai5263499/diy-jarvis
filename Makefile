@@ -18,7 +18,7 @@ deepspeech-image:
 
 # Build mic-capture image
 mic-capture-image:
-	docker build -t kai5263499/dit-jarvis-mic_capture -f cmd/mic_capture/Dockerfile .
+	docker build -t kai5263499/diy-jarvis-mic-capture -f cmd/mic_capture/Dockerfile .
 
 # Run an interactive shell for development and testing
 exec-interactive:
@@ -33,13 +33,13 @@ exec-interactive:
 # Run an image preconfigured with Mozilla Deep Speech and the latest English model
 run-deepspeech:
 	docker run -p 6000:6000 -d \
-	-e MODEL=/deepspeech_models/deepspeech-0.8.2-models.pbmm \
+	-e LOG_LEVEL=debug \
+	-e MQTT_BROKER=tcp://172.17.0.1:1883 \
 	--name diy-jarvis-deepspeech \
 	kai5263499/diy-jarvis-deepspeech
 
 # Slice up a wav file (must be 16k sample rate and mono) and feed it to an audio processor (eg deepspeech-service)
 run-wav-slicer:
-	docker pull kai5263499/diy-jarvis-wav-slicer
 	docker run -it --rm \
 	-e FILE=${FILE} \
 	--mount type=tmpfs,destination=/tmp \
@@ -48,9 +48,9 @@ run-wav-slicer:
 
 # Take a slice of sampled audio and feed it to the audio processor
 run-mic-capture:
-	docker pull kai5263499/diy-jarvis-mic-capture
-	docker rm -f diy-jarvis-mic-capture; true
 	docker run -t -d \
+	-e LOG_LEVEL=debug \
+	-e MQTT_BROKER=tcp://172.17.0.1:1883 \
 	-e DURATION=${DURATION} \
 	-e PULSE_SERVER=${PULSE_SERVER} \
 	-v ${PULSE_CONFIG}:/home/pulseaudio/.config/pulse \

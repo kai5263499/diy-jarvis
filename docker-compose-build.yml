@@ -1,0 +1,26 @@
+version: '3'
+services:
+  builder:
+    image: kai5263499/diy-jarvis-deepspeech-builder
+    build:
+      context: .
+      dockerfile: Dockerfile
+  deepspeech-models:
+    image: kai5263499/diy-jarvis-deepspeech-models
+    build:
+      context: .
+      dockerfile: cmd/deepspeech/Dockerfile.model
+  deepspeech:
+    image: kai5263499/diy-jarvis-deepspeech
+    build:
+      context: .
+      dockerfile: cmd/deepspeech/Dockerfile
+  mic_capture:
+    image: kai5263499/diy-jarvis-mic_capture
+    build:
+      context: .
+      dockerfile: cmd/mic_capture/Dockerfile
+    volumes: 
+      "~/.config/pulse:/home/pulseaudio/.config/pulse"
+
+  

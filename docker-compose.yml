@@ -2,18 +2,21 @@ version: '3'
 services:
   deepspeech:
     image: kai5263499/diy-jarvis-deepspeech
+    restart: always
     environment: 
-      - MQTT_BROKER=tcp://mqtt:1883
+      - MQTT_BROKER=tcp://diy-jarvis-mqtt:1883
+      - LOG_LEVEL=debug
       - DEBUG
-      - MODEL=/deepspeech_models/deepspeech-0.8.2-models.pbmm
   mic_capture:
     image: kai5263499/diy-jarvis-mic_capture
+    restart: always
     environment: 
-      - MQTT_BROKER=tcp://mqtt:1883
-      - DEBUG
+      - MQTT_BROKER=tcp://diy-jarvis-mqtt:1883
+      - LOG_LEVEL=debug
       - PULSE_CONFIG=~/.config/pulse
       - PULSE_SERVER=172.17.0.1
-  mqtt:
+      - DEBUG
+  diy-jarvis-mqtt:
     image: "eclipse-mosquitto:latest"
     restart: always
 volumes:
