@@ -22,18 +22,10 @@ import (
 )
 
 type config struct {
-	MQTTBroker           string  `env:"MQTT_BROKER"`
-	MQTTClientID         string  `env:"MQTT_CLIENT_ID" envDefault:"deepspeech"`
-	LogLevel             string  `env:"LOG_LEVEL" envDefault:"info"`
-	Alphabet             string  `env:"ALPHABET" envDefault:"/deepspeech_models/alphabet.txt"`
-	LanguageModel        string  `env:"LM" envDefault:"/deepspeech_models/lm.binary"`
-	Model                string  `env:"MODEL" envDefault:"/deepspeech_models/output_graph.pbmm"`
-	Trie                 string  `env:"TRIE" envDefault:"/deepspeech_models/trie"`
-	BeamWidth            int     `env:"BEAM_WIDTH" envDefault:"500"`
-	NCep                 int     `env:"NCEP" envDefault:"26"`
-	NContext             int     `env:"NCONTEXT" envDefault:"9"`
-	LMWeight             float64 `env:"LM_WEIGHT" envDefault:"0.75"`
-	ValidWordCountWeight float64 `env:"VALID_WORDCOUNT_WEIGHT" envDefault:"1.85"`
+	MQTTBroker   string `env:"MQTT_BROKER"`
+	MQTTClientID string `env:"MQTT_CLIENT_ID" envDefault:"deepspeech"`
+	LogLevel     string `env:"LOG_LEVEL" envDefault:"info"`
+	Model        string `env:"MODEL" envDefault:"/deepspeech_models/output_graph.pbmm"`
 }
 
 var (
