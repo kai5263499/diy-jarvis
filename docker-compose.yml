@@ -16,6 +16,8 @@ services:
       - PULSE_CONFIG=~/.config/pulse
       - PULSE_SERVER=172.17.0.1
       - DEBUG
+    volumes:
+      - "~/.config/pulse:/home/pulseaudio/.config/pulse"
   diy-jarvis-mqtt:
     image: "eclipse-mosquitto:latest"
     restart: always
