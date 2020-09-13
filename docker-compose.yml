@@ -7,8 +7,8 @@ services:
       - MQTT_BROKER=tcp://diy-jarvis-mqtt:1883
       - LOG_LEVEL=debug
       - DEBUG
-  mic_capture:
-    image: kai5263499/diy-jarvis-mic_capture
+  mic-capture:
+    image: kai5263499/diy-jarvis-mic-capture
     restart: always
     environment: 
       - MQTT_BROKER=tcp://diy-jarvis-mqtt:1883

@@ -1,0 +1,44 @@
+@startuml Process view
+
+skinparam linetype polyline
+
+node DeepSpeech as ds
+node mic_capture as mc
+node wav_slicer as ws
+node MQTT as mqtt 
+node slack_bot as sb
+node text_processor as tp
+node text_sender as ts
+node speaker_output as so
+
+note right of mqtt
+    The default topic for control messages is <<requests>>
+end note
+
+note top of mc
+    Raw WAV data is sent through a topic with the name matching the SourceID UUID for the service
+end note
+
+ds <... mqtt : <<RegisterAudioSourceRequest>>
+ds ...> mqtt : <<TextRequest>>
+ds <... mqtt : <<Raw WAV frames>> 
+mc ...> mqtt : <<RegisterAudioSourceRequest>> 
+mc ...> mqtt : <<Raw WAV frames>>
+ws ...> mqtt : <<Raw WAV frames>>
+ws ...> mqtt : <<RegisterAudioSourceRequest>>
+sb ...> mqtt : <<TextRequest>>
+ts ...> mqtt : <<TextRequest>>
+tp <... mqtt : <<TextRequest>>
+tp ...> mqtt : <<OutputRequest>>
+so ...> mqtt : <<RegisterAudioSinkRequest>>
+so <... mqtt : <<OutputRequest>>
+
+mqtt -[hidden]left- mc
+mqtt -[hidden]left- ws
+mqtt -[hidden]up- ds
+mqtt -[hidden]right- sb
+mqtt -[hidden]right- ts
+mqtt -[hidden]down- tp
+mqtt -[hidden]down- so
+
+@enduml

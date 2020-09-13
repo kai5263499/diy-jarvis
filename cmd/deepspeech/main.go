@@ -67,7 +67,7 @@ func mqttMessageHandler(client mqtt.Client, msg mqtt.Message) {
 	b := pb.Base{
 		Id:        uuid.Must(uuid.NewV4()).String(),
 		Timestamp: uint64(time.Now().Unix()),
-		Type:      pb.Type_OutputResponseType,
+		Type:      pb.Type_TextRequestType,
 		Text:      output,
 	}
 

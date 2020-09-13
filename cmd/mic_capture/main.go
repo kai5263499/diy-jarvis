@@ -103,8 +103,6 @@ func processChunk(req *processAudioDataRequest) {
 	if err := os.Remove(req.tmpFileName); err != nil {
 		logrus.WithError(err).Errorf("error removing tmpFileName %s", req.tmpFileName)
 	}
-
-	logrus.Debugf("removed temp file")
 }
 
 func processMicInput() error {

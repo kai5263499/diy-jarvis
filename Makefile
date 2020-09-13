@@ -22,6 +22,10 @@ deepspeech-image:
 mic-capture-image:
 	docker build -t kai5263499/diy-jarvis-mic-capture -f cmd/mic_capture/Dockerfile .
 
+# Build wav-slicer image
+wav-slicer-image:
+	docker build -t kai5263499/diy-jarvis-wav-slicer -f cmd/wav_slicer/Dockerfile .
+
 # Run an interactive shell for development and testing
 exec-interactive:
 	docker run -it --rm \

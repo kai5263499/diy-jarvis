@@ -1,0 +1,35 @@
+@startuml Scenerio view
+
+actor "Dad" as dad
+actor "Kids" as kids
+actor "Mom" as mom
+
+(Use the application) as (Use)
+
+kids ---> (Use)
+mom ---> (Use)
+dad ---> (Use)
+
+note top of kids 
+    While riding in the backseat the kids issue commands to a to play
+    and enqueue music related to license plates they're seeing
+    ..Result..
+    Jarvis plays a steady stream of John Denver
+end note
+
+note top of mom 
+    While driving to the next destination Mom issues 
+    a commands to check hotel reservations
+    ..Result..
+    Jarvis reassures Mom that there is still room in the inn
+end note
+
+note top of dad 
+    While riding the motorcycle his wife agreed to 
+    let him get Dad issues a command to check 
+    the weather along the route
+    ..Result..
+    Jarvis reassures Dad he didn't need his leather jacket
+end note
+
+@enduml
