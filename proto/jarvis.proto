@@ -6,11 +6,9 @@ enum Type {
     RegisterAudioSourceRequestType = 0;
     OutputRequestType = 1;
     TextRequestType = 2;
-    RegisterAudioSourceResponseType = 3;
-    OutputResponseType = 4;
-    TextResponseType = 5;
-    RegisterAudioSinkRequestType = 6;
-    RegisterAudioSinkResponseType = 7;
+    OutputResponseType = 3;
+    TextResponseType = 4;
+    RegisterAudioSinkRequestType = 5;
 }
 
 enum Code {
