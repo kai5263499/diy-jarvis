@@ -6,12 +6,20 @@ This repo contains the services that make up a simple DIY voice assistant framew
 | ----------- | ----------- | ----------- |
 | diy-jarvis-builder | Used for development and as the build container in our CI/CD pipeline ||
 | diy-jarvis-mic-capture | Captures a number of seconds of microphone data (determined by the `DURATION` environment variable)| `DURATION` controls how much audio to collect before sending it on to the processor|
-| diy-jarvis-deepspeech | Uses the Mozilla Deep Speech library to transform raw wave files into ||
+| diy-jarvis-deepspeech | Uses the Mozilla Deep Speech library to transform raw wave files into text||
 | diy-jarvis-wav-slicer | Slices up a wav `FILE` and feeds the chunks to the audio processor engine | `FILE` is the full path of the file (in the container) to process| 
 
 ## Designs
 
 To get a better idea of how this system is organized, here are a few diagrams in the spirit of the [4+1 architechure view model](https://en.wikipedia.org/wiki/4%2B1_architectural_view_model) pattern ([paper](https://www.cs.ubc.ca/~gregor/teaching/papers/4+1view-architecture.pdf)).
+
+### Usecases
+
+![Scenerio view](docs/scenerio.png)
+
+### Process
+
+![Process view](docs/process.png)
 
 ## Getting started
 
