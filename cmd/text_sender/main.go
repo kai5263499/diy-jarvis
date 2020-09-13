@@ -31,7 +31,7 @@ var (
 func sendRequest(input string) {
 	req := pb.Base{
 		Id:       uuid.Must(uuid.NewV4()).String(),
-		Type:     pb.Type_TextResponseType,
+		Type:     pb.Type_TextRequestType,
 		SourceId: sourceID,
 		Text:     input,
 	}
