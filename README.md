@@ -19,6 +19,8 @@ To get a better idea of how this system is organized, here are a few diagrams in
 
 ### Process
 
+![Process sequence view](docs/process_sequence.png)
+
 ![Process view](docs/process.png)
 
 ## Getting started

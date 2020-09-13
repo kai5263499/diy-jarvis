@@ -1,0 +1,7 @@
+@startuml Process sequence view
+mic_capture --> deepspeech: <<RegisterAudioSourceRequest>> with SourceID
+deepspeech --> mic_capture: Connect and listen for raw WAV data on SourceID topic  
+deepspeech <-- mic_capture: Sends raw WAV data
+deepspeech --> text_processor: <<TextRequest>> with text from speech
+text_processor --> speaker_output: <<OutputRequest>> with action results
+@enduml
