@@ -34,7 +34,7 @@ type config struct {
 	MQTTClientID         string        `env:"MQTT_CLIENT_ID" envDefault:"miccapture"`
 	LogLevel             string        `env:"LOG_LEVEL" envDefault:"info"`
 	PulseInterval        time.Duration `env:"PULSE_DURATION" envDefault:"30s"`
-	AudioCaptureDuration uint          `env:"DURATION" envDefault:"3"`
+	AudioCaptureDuration time.Duration `env:"AUDIO_CAPTURE_DURATION" envDefault:"3s"`
 }
 
 var (
@@ -228,7 +228,7 @@ func main() {
 	sourceID = uuid.Must(uuid.NewV4()).String()
 	sendAudioRegistrationRequest()
 
-	samplesPerChannel = sampleRate * cfg.AudioCaptureDuration
+	samplesPerChannel = sampleRate * uint(cfg.AudioCaptureDuration.Seconds())
 
 	g, _ := errgroup.WithContext(context.Background())
 

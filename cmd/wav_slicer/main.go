@@ -16,11 +16,10 @@ import (
 )
 
 type config struct {
-	MQTTBroker            string `env:"MQTT_BROKER"`
-	MQTTClientID          string `env:"MQTT_CLIENT_ID" envDefault:"wavslicer"`
-	LogLevel              string `env:"LOG_LEVEL" envDefault:"info"`
-	AudioFileToProcess    string `env:"FILE"`
-	AudioProcessorAddress string `env:"AUDIO_PROCESSOR_ADDRESS"`
+	MQTTBroker         string `env:"MQTT_BROKER"`
+	MQTTClientID       string `env:"MQTT_CLIENT_ID" envDefault:"wavslicer"`
+	LogLevel           string `env:"LOG_LEVEL" envDefault:"info"`
+	AudioFileToProcess string `env:"FILE"`
 }
 
 var (
