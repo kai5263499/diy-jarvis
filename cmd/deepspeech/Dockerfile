@@ -16,17 +16,9 @@ FROM ubuntu:18.04
 
 LABEL MAINTAINER="Wes Widner <kai5263499@gmail.com>"
 
-ENV ALPHABET="/deepspeech_models/alphabet.txt"
-ENV LANGUAGE_MODEL="/deepspeech_models/lm.binary"
+ENV LOG_LEVEL=info
+ENV MQTT_BROKER=
 ENV MODEL="/deepspeech_models/deepspeech.pbmm"
-ENV TRIE="/deepspeech_models/trie"
-ENV LISTEN_PORT="6000"
-ENV BEAM_WIDTH="500"
-ENV NCEP="26"
-ENV NCONTEXT="9"
-ENV LM_WEIGHT="0.75"
-ENV VALID_WORDCOUNT_WEIGHT="1.85"
-ENV TEXT_PROCESSOR_ADDRESS=""
 
 COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/deepspeech/deps /
 COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/deepspeech/deepspeech /deepspeech

@@ -11,8 +11,10 @@ FROM ubuntu:18.04
 
 LABEL MAINTAINER="Wes Widner <kai5263499@gmail.com>"
 
-ENV DURATION=10
-ENV AUDIO_PROCESSOR_ADDRESS=""
+ENV LOG_LEVEL=info
+ENV MQTT_BROKER=
+ENV PULSE_DURATION=10s
+ENV AUDIO_CAPTURE_DURATION=3s
 
 COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/mic_capture/deps /
 COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/mic_capture/mic_capture /mic_capture

@@ -15,6 +15,8 @@ services:
       - LOG_LEVEL=debug
       - PULSE_CONFIG=~/.config/pulse
       - PULSE_SERVER=172.17.0.1
+      - PULSE_DURATION-10s
+      - AUDIO_CAPTURE_DURATION=3s
       - DEBUG
     volumes:
       - "~/.config/pulse:/home/pulseaudio/.config/pulse"
