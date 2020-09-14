@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -56,19 +57,34 @@ func mqttMessageHandler(client mqtt.Client, msg mqtt.Message) {
 		d = append(d, int16(s))
 	}
 
-	output, sttErr := model.SpeechToText(d)
+	md, sttErr := model.SpeechToTextWithMetadata(d, 1)
 	if sttErr != nil {
 		logrus.WithError(sttErr).Error("error speech to text")
 		return
 	}
+	defer md.Close()
 
-	logrus.Debugf("stt %s", output)
+	var output bytes.Buffer
+
+	var confidence float64
+	for ti, transcript := range md.Transcripts() {
+		confidence = transcript.Confidence()
+		for _, token := range transcript.Tokens() {
+			output.WriteString(token.Text())
+		}
+		if ti < len(md.Transcripts())-1 {
+			output.WriteString(" ")
+		}
+	}
+
+	outputStr := output.String()
+	logrus.Debugf("confidence=%f stt=%s", confidence, outputStr)
 
 	b := pb.Base{
 		Id:        uuid.Must(uuid.NewV4()).String(),
 		Timestamp: uint64(time.Now().Unix()),
 		Type:      pb.Type_TextRequestType,
-		Text:      output,
+		Text:      outputStr,
 	}
 
 	if err := mqttComms.SendRequest(b); err != nil {
