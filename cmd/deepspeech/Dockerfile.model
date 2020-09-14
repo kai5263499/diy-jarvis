@@ -7,9 +7,7 @@ RUN apt-get update && \
     apt-get install -y wget && \
     mkdir -p /deepspeech_models
 
-RUN wget https://github.com/mozilla/DeepSpeech/releases/download/v${DEEPSPEECH_VERSION}/deepspeech-${DEEPSPEECH_VERSION}-models.pbmm -O /deepspeech_models/deepspeech.pbmm && \
-    wget https://github.com/mozilla/DeepSpeech/releases/download/v${DEEPSPEECH_VERSION}/deepspeech-${DEEPSPEECH_VERSION}-models.tflite -O /deepspeech_models/deepspeech.tflite && \
-    wget https://github.com/mozilla/DeepSpeech/releases/download/v${DEEPSPEECH_VERSION}/deepspeech-${DEEPSPEECH_VERSION}-models.scorer -O /deepspeech_models/deepspeech.scorer
+RUN wget https://github.com/mozilla/DeepSpeech/releases/download/v${DEEPSPEECH_VERSION}/deepspeech-${DEEPSPEECH_VERSION}-models.pbmm -O /deepspeech_models/deepspeech.pbmm
 
 FROM scratch
 
