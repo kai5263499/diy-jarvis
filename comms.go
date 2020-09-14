@@ -36,13 +36,13 @@ type MqttComms struct {
 }
 
 func (m *MqttComms) messageHandler(client mqtt.Client, msg mqtt.Message) {
-	logrus.Debugf("got message with %d bytes from %s", len(msg.Payload()), msg.Topic())
-
 	var req pb.Base
 	if err := proto.Unmarshal(msg.Payload(), &req); err != nil {
 		logrus.WithError(err).Errorf("unable to unmarshal request")
 		return
 	}
+
+	logrus.Debugf("got message with %d bytes from %s with type=%#v", len(msg.Payload()), msg.Topic(), req.Type)
 
 	m.baseChan <- req
 }
