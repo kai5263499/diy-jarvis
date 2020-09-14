@@ -23,6 +23,8 @@ services:
   diy-jarvis-mqtt:
     image: "eclipse-mosquitto:latest"
     restart: always
+    ports:
+      - 1883
 volumes:
   tmp-content:
   
