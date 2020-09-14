@@ -1,10 +1,7 @@
 package main
 
 import (
-	"bufio"
-	"io"
 	"os"
-	"sync"
 
 	"github.com/caarlos0/env"
 	"github.com/gofrs/uuid"
@@ -28,36 +25,6 @@ var (
 	sourceID     string
 )
 
-func sendRequest(input string) {
-	req := pb.Base{
-		Id:       uuid.Must(uuid.NewV4()).String(),
-		Type:     pb.Type_TextRequestType,
-		SourceId: sourceID,
-		Text:     input,
-	}
-
-	mqttComms.SendRequest(req)
-}
-
-func processInput(wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	var err error
-	var input string
-
-	reader := bufio.NewReader(os.Stdin)
-	for {
-		input, err = reader.ReadString('\n')
-		if err == io.EOF {
-			break
-		}
-
-		sendRequest(input)
-	}
-
-	sendRequest(input)
-}
-
 func main() {
 	cfg = config{}
 	if err := env.Parse(&cfg); err != nil {
@@ -78,8 +45,22 @@ func main() {
 		logrus.WithError(newMqttErr).Fatal("error creating mqtt comms")
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go processInput(&wg)
-	wg.Wait()
+	if len(os.Args) < 2 {
+		logrus.Fatal("must include text to send")
+	}
+
+	input := os.Args[1]
+
+	req := pb.Base{
+		Id:       uuid.Must(uuid.NewV4()).String(),
+		Type:     pb.Type_TextRequestType,
+		SourceId: sourceID,
+		Text:     input,
+	}
+
+	if err := mqttComms.SendRequest(req); err != nil {
+		logrus.WithError(err).Fatal("error sending request")
+	}
+
+	mqttComms.Close()
 }
