@@ -16,10 +16,11 @@ import (
 )
 
 type config struct {
-	MQTTBroker         string `env:"MQTT_BROKER"`
-	MQTTClientID       string `env:"MQTT_CLIENT_ID" envDefault:"wavslicer"`
-	LogLevel           string `env:"LOG_LEVEL" envDefault:"info"`
-	AudioFileToProcess string `env:"FILE"`
+	MQTTBroker         string        `env:"MQTT_BROKER"`
+	MQTTClientID       string        `env:"MQTT_CLIENT_ID" envDefault:"wavslicer"`
+	LogLevel           string        `env:"LOG_LEVEL" envDefault:"info"`
+	AudioFileToProcess string        `env:"FILE"`
+	AudioSampleSize    time.Duration `env:"AUDIO_SAMPLE_SIZE" envDefault:"3s"`
 }
 
 var (
@@ -73,7 +74,7 @@ func processChunk(req *processAudioDataRequest) {
 		logrus.WithError(err).Errorf("error removing tmpFileName %s", req.tmpFileName)
 	}
 
-	logrus.Debugf("removed temp file")
+	logrus.Debug("removed temp file")
 }
 
 func processWavFile(wavFile string) error {
@@ -95,7 +96,7 @@ func processWavFile(wavFile string) error {
 		return newReaderErr
 	}
 
-	samplesPerChunk := r.GetSampleRate() * uint32(10)
+	samplesPerChunk := r.GetSampleRate() * uint32(cfg.AudioSampleSize.Seconds())
 
 	meta := wav.File{
 		Channels:        r.GetNumChannels(),
