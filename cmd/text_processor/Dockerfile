@@ -13,6 +13,7 @@ LABEL MAINTAINER="Wes Widner <kai5263499@gmail.com>"
 
 ENV LOG_LEVEL=info
 ENV MQTT_BROKER=
+ENV COMMAND_SPEC_YAML=commands.yaml
 
 EXPOSE 6001
 

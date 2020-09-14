@@ -9,3 +9,8 @@ commands:
     return-output: true
     action: >
       "I'm sorry Dave, I can't do that"
+  - command: "play"
+    action-format: static
+    return-output: true
+    action: >
+      "playing spotify"
