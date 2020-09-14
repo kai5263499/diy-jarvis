@@ -11,8 +11,9 @@ FROM scratch
 
 LABEL MAINTAINER="Wes Widner <kai5263499@gmail.com>"
 
+ENV LOG_LEVEL=info
+ENV MQTT_BROKER=
 ENV SLACK_TOKEN=""
-ENV TEXT_PROCESSOR_ADDRESS=""
 
 COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/slack_bot/deps /
 COPY --from=builder /go/src/github.com/kai5263499/diy-jarvis/cmd/slack_bot/slack_bot /slack_bot

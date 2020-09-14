@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -12,25 +11,26 @@ import (
 	"github.com/gofrs/uuid"
 	dj "github.com/kai5263499/diy-jarvis"
 	pb "github.com/kai5263499/diy-jarvis/generated"
-	"github.com/nlopes/slack"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/sync/errgroup"
+	"github.com/slack-go/slack"
 )
 
 type config struct {
-	MQTTBroker   string `env:"MQTT_BROKER"`
-	MQTTClientID string `env:"MQTT_CLIENT_ID" envDefault:"slackbot"`
-	LogLevel     string `env:"LOG_LEVEL" envDefault:"info"`
-	SlackToken   string `env:"SLACK_TOKEN"`
+	MQTTBroker   string   `env:"MQTT_BROKER"`
+	MQTTClientID string   `env:"MQTT_CLIENT_ID" envDefault:"slackbot"`
+	LogLevel     string   `env:"LOG_LEVEL" envDefault:"info"`
+	SlackToken   string   `env:"SLACK_TOKEN"`
+	Channels     []string `env:"CHANNELS" envDefault:"jarvis"`
 }
 
 var (
-	cfg          config
-	slackClient  *slack.Client
-	slackRtm     *slack.RTM
-	slackChannel *slack.Channel
-	mqttComms    *dj.MqttComms
-	sourceID     string
+	cfg           config
+	slackClient   *slack.Client
+	slackRtm      *slack.RTM
+	slackChannel  *slack.Channel
+	mqttComms     *dj.MqttComms
+	sourceID      string
+	slackChannels []*slack.Channel
 )
 
 func processFileUpload(ev *slack.FileSharedEvent) {
@@ -69,7 +69,6 @@ func processMessage(ev *slack.MessageEvent) {
 }
 
 func slackReadLoop() {
-Loop:
 	for {
 		select {
 		case msg := <-slackRtm.IncomingEvents:
@@ -77,16 +76,15 @@ Loop:
 
 			switch ev := msg.Data.(type) {
 			case *slack.ConnectedEvent:
-				logrus.Debugf("Connection counter: %d", ev.ConnectionCount)
+				logrus.Infof("Connection counter: %d", ev.ConnectionCount)
 			case *slack.MessageEvent:
+				logrus.Debugf("message event received!")
 				go processMessage(ev)
-			case *slack.FileSharedEvent:
-				go processFileUpload(ev)
 			case *slack.RTMError:
-				logrus.Warnf("RTMError: %s\n", ev.Error())
+				logrus.Errorf("RTMError: %s", ev.Error())
 			case *slack.InvalidAuthEvent:
-				logrus.Errorf("Invalid credentials!\n")
-				break Loop
+				logrus.Error("Invalid credentials!")
+				return
 			default:
 				//Take no action
 			}
@@ -100,6 +98,7 @@ func sendRequest(input string) {
 	req := pb.Base{
 		Id:       newUUID.String(),
 		Text:     input,
+		Type:     pb.Type_TextRequestType,
 		SourceId: sourceID,
 	}
 
@@ -119,6 +118,24 @@ func waitForCtrlC() {
 	endWaiter.Wait()
 }
 
+func joinChannels() {
+	slackChannels = make([]*slack.Channel, len(cfg.Channels))
+	for _, chanStr := range cfg.Channels {
+		channel, err := slackClient.JoinChannel(chanStr)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"channel": chanStr,
+				"err":     err,
+			}).Error("failed to join channel")
+		} else {
+			logrus.WithFields(logrus.Fields{
+				"channel": chanStr,
+			}).Debug("joined channel")
+			slackChannels = append(slackChannels, channel)
+		}
+	}
+}
+
 func main() {
 	cfg = config{}
 	if err := env.Parse(&cfg); err != nil {
@@ -133,31 +150,21 @@ func main() {
 
 	sourceID = uuid.Must(uuid.NewV4()).String()
 
-	logrus.Info("Connecting to slack")
+	logrus.Debug("connecting to slack")
 
 	slackClient = slack.New(cfg.SlackToken)
-	slackClient.SetUserAsActive()
 	slackRtm = slackClient.NewRTM()
+	go slackRtm.ManageConnection()
+	joinChannels()
+	go slackReadLoop()
+
+	logrus.Infof("connected to Slack with sourceID %s", sourceID)
 
 	var newMqttErr error
 	mqttComms, newMqttErr = dj.NewMqttComms(cfg.MQTTClientID, cfg.MQTTBroker)
 	if newMqttErr != nil {
 		logrus.WithError(newMqttErr).Fatal("error creating mqtt comms")
 	}
-
-	g, _ := errgroup.WithContext(context.Background())
-
-	g.Go(func() error {
-		slackReadLoop()
-		return nil
-	})
-
-	g.Go(func() error {
-		slackRtm.ManageConnection()
-		return nil
-	})
-
-	g.Wait()
 
 	waitForCtrlC()
 }
