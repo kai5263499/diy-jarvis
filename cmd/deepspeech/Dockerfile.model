@@ -1,7 +1,7 @@
-FROM ubuntu:18.04 as models
+FROM ubuntu:22.04 as models
 
 # DEEPSPEECH_VERSION is the version of deepspeech to use
-ARG DEEPSPEECH_VERSION=0.8.2
+ARG DEEPSPEECH_VERSION=0.9.3
 
 RUN apt-get update && \
     apt-get install -y wget && \
@@ -12,7 +12,7 @@ RUN wget https://github.com/mozilla/DeepSpeech/releases/download/v${DEEPSPEECH_V
 FROM scratch
 
 LABEL MAINTAINER="Wes Widner <kai5263499@gmail.com>"
-LABEL DEEPSPEECH_VERSION=0.8.2
+LABEL DEEPSPEECH_VERSION=0.9.3
 
 COPY --from=models /deepspeech_models /deepspeech_models
 
