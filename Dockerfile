@@ -1,12 +1,12 @@
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 
 LABEL MAINTAINER="Wes Widner <kai5263499@gmail.com>"
 
 # GPU_PLATFORM is the location where model processing takes place. cpu or cuda
 ARG GPU_PLATFORM=cpu
 
-# DEEPSPEECH_VERSION is the version of deepspeech to use
-ARG DEEPSPEECH_VERSION=0.7.1
+ARG DEEPSPEECH_VERSION=0.9.3
+ARG GOLANG_VERSION=1.18.7
 
 ENV CGO_ENABLED=1 CGO_CPPFLAGS="-I/usr/include"
 ENV GOPATH=/go
@@ -40,10 +40,10 @@ RUN apt-get update && \
 	libsodium-dev
 
 RUN echo "Install golang" && \
-	curl -sLO https://dl.google.com/go/go1.13.3.linux-amd64.tar.gz && \
-	tar -xf go1.13.3.linux-amd64.tar.gz && \
+	curl -sLO https://dl.google.com/go/go${GOLANG_VERSION}.linux-amd64.tar.gz && \
+	tar -xf go${GOLANG_VERSION}.linux-amd64.tar.gz && \
 	mv go /usr/local && \
-	rm -rf go1.13.3.linux-amd64.tar.gz
+	rm -rf go${GOLANG_VERSION}.linux-amd64.tar.gz
 
 RUN	echo "Install deepspeech" && \
 	mkdir -p /deepspeech && \

@@ -3,6 +3,7 @@ FROM kai5263499/diy-jarvis-builder as builder
 COPY / /go/src/github.com/kai5263499/diy-jarvis
 
 RUN cd /go/src/github.com/kai5263499/diy-jarvis/cmd/slack_bot && \
+    go mod vendor && \
     go build && \
     ldd slack_bot | tr -s '[:blank:]' '\n' | grep '^/' | \
     xargs -I % sh -c 'mkdir -p $(dirname deps%); cp % deps%;'

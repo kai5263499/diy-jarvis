@@ -1,3 +1,6 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/kai5263499/diy-jarvis)](https://goreportcard.com/report/github.com/kai5263499/diy-jarvis)
+![tests](https://github.com/kai5263499/diy-jarvis/actions/workflows/tests.yml/badge.svg)
+
 # diy-jarvis
 
 This repo contains the services that make up a simple DIY voice assistant framework. The components of this framework are broken up into docker images for easier development. These images are

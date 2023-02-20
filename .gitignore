@@ -1,4 +1,4 @@
-vendor
+vendor/
 
 cmd/deepspeech/deepspeech
 cmd/mic_capture/mic_capture
@@ -6,8 +6,6 @@ cmd/slack_bot/slack_bot
 cmd/text_processor/text_processor
 cmd/text_sender/text_sender
 cmd/wav_slicer/wav_slicer
-environ.rc
-mac-environ.rc
-linux-environ.rc
+*.rc
 testdata/harvard-sentences.*
-out
+out/
